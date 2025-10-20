@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState, useCallback, useMemo } from "react"
+import { useEffect, useState, useCallback, useMemo, useRef } from "react"
 import { Toaster, toast } from "react-hot-toast"
 import {
   Moon,
@@ -119,9 +119,9 @@ const TRANSLATIONS = {
     notNow: "ليس الآن",
     supportNow: "ادعم الآن",
     failureRate: "نسبة الفشل الإجمالية",
-    failureRateTooltip: "نسبة الطلبات التي فشلت (لم يتم تأكيدها أو لم يتم توصيلها)",
-    returnRateTooltip: "نسبة الطلبات المسلمة التي تم إرجاعها من قبل الزبون",
-    calculatedReturnRate: "نسبة الإرجاع المحسوبة",
+    failureRateTooltip: "نسبة الطلبات التي فشلت (لم يتم تأكيدها أو لم يتم توصيلها) — هذا هو taux d'échec الذي يحسب من (1 - conf * del).",
+    returnRateTooltip: "نسبة الطلبات المسلمة التي تم إرجاعها من قبل الزبون (تُدخل يدوياً في أغلب الحالات).",
+    calculatedReturnRate: "نسبة الإرجاع/الفشل المحسوبة",
   },
   fr: {
     title: "Calculateur de Profit COD — Algérie",
@@ -196,14 +196,16 @@ const TRANSLATIONS = {
     notNow: "Pas maintenant",
     supportNow: "Soutenir maintenant",
     failureRate: "Taux d'échec global",
-    failureRateTooltip: "Pourcentage de commandes qui ont échoué (non confirmées ou non livrées)",
-    returnRateTooltip: "Pourcentage de commandes livrées qui ont été retournées par le client",
-    calculatedReturnRate: "Taux de retour calculé",
+    failureRateTooltip: "Pourcentage de commandes qui ont échoué (non confirmées ou non livrées) — calculé par (1 - conf * del).",
+    returnRateTooltip: "Pourcentage de commandes livrées qui ont été retournées par le client (souvent saisi manuellement).",
+    calculatedReturnRate: "Taux calculé (échec / retour)",
   },
 }
 
 // --- INPUT VALIDATION ---
 const validateInput = (name, value) => {
+  // allow empty value to let user clear
+  if (value === "") return value
   const numValue = Number(value)
 
   if (isNaN(numValue)) return value
@@ -211,10 +213,11 @@ const validateInput = (name, value) => {
   // Prevent negative numbers
   if (numValue < 0) return "0"
 
-  // Prevent percentages over 100
+  // Prevent percentages over 100 for percent fields
   if (["conf", "del", "returnRate"].includes(name) && numValue > 100) return "100"
 
-  return value
+  // otherwise return raw string (we want to keep user's formatting as string)
+  return String(numValue)
 }
 
 // --- TOOLTIP COMPONENT ---
@@ -241,8 +244,6 @@ const Tooltip = ({ text, children }) => {
   )
 }
 
-// ... (keep all the existing helper functions and generateSmartTips the same)
-
 // --- HELPER FUNCTIONS ---
 function moneyFmt(num) {
   if (!isFinite(num)) return "—"
@@ -256,7 +257,7 @@ function generateSmartTips(inputs, result) {
   const margin = result?.margin || 0
   const net = result?.net || 0
   const success = result?.success || 0
-  const returnRate = result?.returnRate || 0 // Use result.returnRate for analysis
+  const returnRate = (result?.returnRatePercent || 0) * 100 // percentage for analysis
 
   // Confirmation Rate Analysis
   if (conf < 30) {
@@ -365,7 +366,7 @@ function generateSmartTips(inputs, result) {
       type: "success",
       text: "ربح قوي جداً (500+ دج)! استراتيجية النمو: 1) زيادة الإنفاق على الإعلانات، 2) توسيع نطاق المنتجات، 3) بناء قائمة عملاء دائمين.",
       textFr:
-        "Profit fort (500+ DA)! Stratégie de croissance: 1) Augmentez le budget pub, 2) Diversifiez, 3) Fidélisez les clients.",
+        "Profit fort (500+ DA)! Stratégie de croissance: 1) Augmentez le budget pub, 2) Diversifiez, 3) Fidélisez les العملاء.",
     })
   }
 
@@ -411,6 +412,12 @@ export default function App() {
   const [showPremiumModal, setShowPremiumModal] = useState(false)
   const [showSupportAlert, setShowSupportAlert] = useState(false)
 
+  // refs to avoid stale closure in calculate
+  const historyRef = useRef(history)
+  useEffect(() => { historyRef.current = history }, [history])
+  const historyIndexRef = useRef(historyIndex)
+  useEffect(() => { historyIndexRef.current = historyIndex }, [historyIndex])
+
   const [inputs, setInputs] = useState(() => {
     if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search)
@@ -435,31 +442,34 @@ export default function App() {
 
   const t = TRANSLATIONS[lang]
 
-  // Calculate return rate from home tab inputs
+  // Calculate return/failure rate from home tab inputs (failure = orders not confirmed OR not delivered)
   const calculatedReturnRate = useMemo(() => {
     const conf = Number(inputs.conf) / 100 || 0
     const del = Number(inputs.del) / 100 || 0
     const success = conf * del
-    return (1 - success) * 100 // This is the failure rate that can be used as suggested return rate
+    return (1 - success) * 100 // percentage of failed orders (taux d'échec)
   }, [inputs.conf, inputs.del])
 
-  // Auto-update premium inputs when home inputs change
+  // Auto-update premium inputs' calculatedReturnRate when home inputs change
   useEffect(() => {
     if (premiumUnlocked) {
-      setPremiumInputs(prev => ({
-        ...prev,
-        calculatedReturnRate: calculatedReturnRate.toFixed(2)
-      }))
+      setPremiumInputs(prev => {
+        const updated = { ...prev, calculatedReturnRate: Number(calculatedReturnRate).toFixed(2) }
+        // we keep only user editable fields persisted
+        const persisted = { returnFee: updated.returnFee, returnRate: updated.returnRate }
+        localStorage.setItem("cod-premium-inputs", JSON.stringify(persisted))
+        return updated
+      })
     }
   }, [calculatedReturnRate, premiumUnlocked])
 
-  // --- THEME EFFECT ---
+  // Theme effect
   useEffect(() => {
     document.documentElement.classList.toggle("dark", dark)
     localStorage.setItem("cpa-theme", dark ? "dark" : "light")
   }, [dark])
 
-  // --- URL SYNC EFFECT ---
+  // URL sync
   useEffect(() => {
     if (typeof window !== "undefined" && result) {
       const params = new URLSearchParams(inputs)
@@ -467,7 +477,7 @@ export default function App() {
     }
   }, [inputs, result])
 
-  // --- LOAD PRESETS AND HISTORY ---
+  // load saved data
   useEffect(() => {
     if (typeof window !== "undefined") {
       const savedPresets = localStorage.getItem("cod-presets")
@@ -495,9 +505,9 @@ export default function App() {
     }
   }, [])
 
-  // --- CORRECTED CALCULATION LOGIC ---
+  // --- CALCULATION (stable deps)
   const calculate = useCallback(() => {
-    // Convert all values to DZD based on selected currency
+    // Convert based on currency
     const exchangeRate = CONFIG.exchangeRates[inputs.currency] || 1
     const toDZD = (value) => {
       const v = Number(value) || 0
@@ -511,11 +521,10 @@ export default function App() {
     const conf = Number(inputs.conf) / 100 || 0
     const del = Number(inputs.del) / 100 || 0
 
-    // CORRECTED CALCULATIONS
+    // CORE CALCS
     const success = conf * del
-    const failureRate = (1 - success) * 100
+    const failureRate = (1 - success) * 100 // percentage
 
-    // Handle edge case where success rate is 0
     const effAd = success > 0.001 ? ad / success : ad * 1000
     const totalCost = product + shipping + effAd
     const net = price - totalCost
@@ -526,10 +535,9 @@ export default function App() {
     const roi = totalCost > 0 ? (net / totalCost) * 100 : 0
     const projectedProfit = net * 100
 
-    // CORRECTED RISK CALCULATIONS
+    // Risk / return
     const returnFee = toDZD(premiumInputs.returnFee)
-    const returnRatePercent = Number(premiumInputs.returnRate) / 100 || 0
-
+    const returnRatePercent = Number(premiumInputs.returnRate) / 100 || 0 // decimal
     const expectedLoss = returnRatePercent * returnFee
     const riskAdjustedProfit = net - expectedLoss
 
@@ -544,24 +552,31 @@ export default function App() {
       roi,
       projectedProfit,
       returnFee,
-      failureRate,
-      returnRatePercent,
+      failureRate, // percentage
+      returnRatePercent, // decimal
       expectedLoss,
       riskAdjustedProfit,
-      calculatedReturnRate, // Add this to results
+      calculatedReturnRate: Number(calculatedReturnRate).toFixed(2),
     }
+
     setResult(results)
 
-    const newHistory = history.slice(0, historyIndex + 1)
-    newHistory.push({ inputs: { ...inputs }, result: results, timestamp: new Date().toISOString() })
-    setHistory(newHistory)
-    setHistoryIndex(newHistory.length - 1)
-    localStorage.setItem("cod-history", JSON.stringify(newHistory))
+    // update history using refs to avoid stale closure
+    setHistory(prev => {
+      const currentIndex = historyIndexRef.current
+      const sliced = prev.slice(0, currentIndex + 1)
+      const newEntry = { inputs: { ...inputs }, result: results, timestamp: new Date().toISOString() }
+      const next = [...sliced, newEntry]
+      localStorage.setItem("cod-history", JSON.stringify(next))
+      // update historyIndex after history is set
+      setHistoryIndex(next.length - 1)
+      return next
+    })
 
     return results
-  }, [inputs, premiumInputs]) // Fixed dependencies
+  }, [inputs, premiumInputs, calculatedReturnRate])
 
-  // --- HANDLERS with VALIDATION ---
+  // --- HANDLERS with validation ---
   const handleInputChange = (key, value) => {
     const validatedValue = validateInput(key, value)
     setInputs((prev) => ({ ...prev, [key]: validatedValue }))
@@ -571,7 +586,9 @@ export default function App() {
     const validatedValue = validateInput(key, value)
     setPremiumInputs((prev) => {
       const updated = { ...prev, [key]: validatedValue }
-      localStorage.setItem("cod-premium-inputs", JSON.stringify(updated))
+      // persist only the user-editable fields
+      const persisted = { returnFee: updated.returnFee, returnRate: updated.returnRate }
+      localStorage.setItem("cod-premium-inputs", JSON.stringify(persisted))
       return updated
     })
   }
@@ -593,7 +610,6 @@ export default function App() {
     }
   }
 
-  // --- TAB ACCESS CONTROL ---
   const handleTabClick = (tabId) => {
     const premiumTabs = ["analytics", "comparison", "riskManagement"]
 
@@ -604,8 +620,6 @@ export default function App() {
     }
   }
 
-
-  // ... (rest of your handlers remain the same)
   const copyShareLink = () => {
     navigator.clipboard
       .writeText(window.location.href)
@@ -615,7 +629,6 @@ export default function App() {
 
   const exportCSV = () => {
     if (!result) {
-      // Added check for result before exporting
       toast.error("Please calculate first")
       return
     }
@@ -639,6 +652,7 @@ export default function App() {
       "return_rate_percent",
       "expected_loss",
       "risk_adjusted_profit",
+      "failure_rate",
     ]
     const data = [
       inputs.product,
@@ -660,6 +674,7 @@ export default function App() {
       (result.returnRatePercent * 100).toFixed(2) + "%",
       isFinite(result.expectedLoss) ? result.expectedLoss.toFixed(2) : "N/A",
       isFinite(result.riskAdjustedProfit) ? result.riskAdjustedProfit.toFixed(2) : "N/A",
+      isFinite(result.failureRate) ? result.failureRate.toFixed(2) + "%" : "N/A",
     ]
 
     const csvContent = [headers.join(","), data.map((d) => `"${String(d).replace(/"/g, '""')}"`).join(",")].join("\n")
@@ -678,7 +693,7 @@ export default function App() {
       toast.error("Please enter a preset name")
       return
     }
-    const newPreset = { name: presetName, inputs: { ...inputs }, id: Date.now() } // Removed rates from preset, as they are not directly used in the calculation logic anymore
+    const newPreset = { name: presetName, inputs: { ...inputs }, id: Date.now() }
     const updatedPresets = [...presets, newPreset]
     setPresets(updatedPresets)
     localStorage.setItem("cod-presets", JSON.stringify(updatedPresets))
@@ -689,7 +704,6 @@ export default function App() {
 
   const loadPreset = (preset) => {
     setInputs(preset.inputs)
-    // No need to set rates explicitly, as they are not part of presets anymore
     toast.success("Preset loaded!")
   }
 
@@ -738,8 +752,6 @@ export default function App() {
     toast.success("History cleared!")
   }
 
-
-
   return (
     <>
       <Toaster
@@ -787,8 +799,8 @@ export default function App() {
               { id: "analytics", label: t.analytics, icon: "📊", premium: true },
               { id: "comparison", label: t.comparison, icon: "⚖️", premium: true },
               {
-                id: "riskManagement", // Changed from premium
-                label: t.riskManagement, // Changed label
+                id: "riskManagement",
+                label: t.riskManagement,
                 icon: premiumUnlocked ? "🔓" : "🔒",
                 premium: true,
               },
@@ -819,7 +831,7 @@ export default function App() {
                 onRedo={redo}
                 canUndo={historyIndex > 0}
                 canRedo={historyIndex < history.length - 1}
-                onCalculate={handleCalculate} // Pass onCalculate handler
+                onCalculate={handleCalculate}
               />
               <ResultsDisplay
                 result={result}
@@ -861,18 +873,18 @@ export default function App() {
             <ComparisonTab comparison={comparison} t={t} onRemove={removeFromComparison} />
           )}
 
-          {activeTab === "riskManagement" && premiumUnlocked && ( // Changed from premium
-            <RiskManagementTab // Changed component name
+          {activeTab === "riskManagement" && premiumUnlocked && (
+            <RiskManagementTab
               result={result}
               inputs={inputs}
               premiumInputs={premiumInputs}
               onPremiumInputChange={handlePremiumInputChange}
               t={t}
               calculatedReturnRate={calculatedReturnRate}
+              lang={lang}
             />
           )}
 
-          {/* Show locked message for premium tabs */}
           {(activeTab === "analytics" || activeTab === "comparison" || activeTab === "riskManagement") && !premiumUnlocked && (
             <GlassCard className="mt-6 text-center py-12">
               <Lock size={48} className="mx-auto mb-4 text-slate-400" />
@@ -898,7 +910,7 @@ export default function App() {
   )
 }
 
-// In your ResultsDisplay component, add tooltips:
+// ResultsDisplay: fixed labels, show both failure (taux d'échec) and return rate
 function ResultsDisplay({ result, t, onBaridiMobClick, onAddComparison, onSavePreset }) {
   const resultData = useMemo(() => {
     if (!result) return null
@@ -966,7 +978,31 @@ function ResultsDisplay({ result, t, onBaridiMobClick, onAddComparison, onSavePr
             <Metric label={t.roi} value={`${resultData.roi.toFixed(2)}`} currency="%" />
           </div>
 
-          <Metric label={t.tauxRetour} value={`${resultData.returnRate.toFixed(2)}`} currency="%" />
+          {/* Show both computed failure (taux d'échec) and chosen return rate */}
+          <div className="grid sm:grid-cols-2 gap-3">
+            <Metric
+              label={
+                <Tooltip text={t.failureRateTooltip}>
+                  <span>{t.failureRate}</span>
+                </Tooltip>
+              }
+              value={`${resultData.failureRate.toFixed(2)}`}
+              currency="%"
+            />
+            <Metric
+              label={
+                <Tooltip text={t.returnRateTooltip}>
+                  <span>{t.calculatedReturnRate ? t.calculatedReturnRate : t.returnRate}</span>
+                </Tooltip>
+              }
+              value={
+                resultData.returnRatePercent !== undefined
+                  ? `${(resultData.returnRatePercent * 100).toFixed(2)}`
+                  : resultData.calculatedReturnRate
+              }
+              currency="%"
+            />
+          </div>
 
           <div className={`mt-2 p-4 rounded-lg text-white font-semibold text-center ${resultData.resultBg}`}>
             {t.resultStatus(resultData.net)}
@@ -991,8 +1027,6 @@ function ResultsDisplay({ result, t, onBaridiMobClick, onAddComparison, onSavePr
               <DonationButton href={CONFIG.donation.redotpay} text="RedotPay" />
             </div>
           </div>
-
-
         </>
       ) : (
         <div className="flex items-center justify-center h-full text-slate-500">{t.calculating}</div>
@@ -1001,8 +1035,8 @@ function ResultsDisplay({ result, t, onBaridiMobClick, onAddComparison, onSavePr
   )
 }
 
-// Rename PremiumTab to RiskManagementTab and add the connection
-function RiskManagementTab({ result, inputs, premiumInputs, onPremiumInputChange, t, calculatedReturnRate }) {
+// RiskManagementTab with simple accordion sections and connection to home inputs
+function RiskManagementTab({ result, inputs, premiumInputs, onPremiumInputChange, t, calculatedReturnRate, lang }) {
   if (!result) {
     return (
       <GlassCard className="mt-6">
@@ -1013,34 +1047,39 @@ function RiskManagementTab({ result, inputs, premiumInputs, onPremiumInputChange
 
   const conf = Number(inputs.conf) / 100 || 0
   const del = Number(inputs.del) / 100 || 0
-  // Calculate the failure rate based on confirmation and delivery rates
   const failureRate = (1 - conf * del) * 100
-  const autoCalculatedReturnRate = failureRate.toFixed(2)
+  const autoCalculatedReturnRate = Number(failureRate).toFixed(2)
 
-  const InputGroup = ({ label, name, value, onChange, type = "number", info, disabled = false }) => (
+  const [open, setOpen] = useState({
+    risk: true,
+    metrics: true,
+    insights: false,
+    projection: false,
+  })
+
+  const toggle = (key) => setOpen((prev) => ({ ...prev, [key]: !prev[key] }))
+
+  const InputGroup = ({ label, name, value, onChange, type = "number", disabled = false, tooltip }) => (
     <div>
-      <label htmlFor={name} className="text-sm font-medium text-slate-600 dark:text-slate-300 flex items-center gap-2">
-        {label}
-        {info && (
-          <div className="group relative">
-            <Info size={16} className="text-slate-400 cursor-help hover:text-slate-300 transition" />
-            <div className="absolute bottom-full left-0 mb-2 hidden group-hover:block bg-slate-800 dark:bg-slate-700 text-white text-xs rounded p-3 w-56 z-10 shadow-lg border border-slate-600">
-              {info}
-            </div>
-          </div>
+      <label className="text-sm font-medium text-slate-600 dark:text-slate-300 flex items-center gap-2">
+        {tooltip ? (
+          <Tooltip text={tooltip}>
+            <span>{label}</span>
+          </Tooltip>
+        ) : (
+          label
         )}
       </label>
       <div className="relative mt-1">
         <input
-          id={name}
-          name={name}
           value={value}
           onChange={(e) => onChange(name, e.target.value)}
           type={type}
           disabled={disabled}
+          min={type === "number" ? "0" : undefined}
+          max={name === "returnRate" ? "100" : undefined}
           className={`w-full p-3 rounded-lg bg-slate-200 dark:bg-white/5 placeholder:text-slate-400 outline-none focus:ring-2 focus:ring-indigo-400 transition ${disabled ? "cursor-not-allowed opacity-60" : ""
             }`}
-          autoComplete="off"
         />
       </div>
     </div>
@@ -1058,33 +1097,37 @@ function RiskManagementTab({ result, inputs, premiumInputs, onPremiumInputChange
   const breakEvenPrice = result.totalCost
   const breakEvenWithReturns = result.totalCost + result.expectedLoss
 
-
   return (
     <GlassCard className="mt-6">
       <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
         <Lock size={20} />
-        {t.riskManagementFeatures} {/* Changed title */}
+        {t.riskManagementFeatures}
       </h2>
 
-      <div className="grid lg:grid-cols-2 gap-6">
-        {/* Risk Management Section */}
-        <div>
-          <h3 className="text-lg font-semibold mb-4">⚠️ {t.riskManagement}</h3>
-          <div className="space-y-4">
-            <InputGroup
-              label={t.returnFee}
-              name="returnFee"
-              value={premiumInputs.returnFee}
-              onChange={onPremiumInputChange}
-            />
+      {/* Accordion: Risk Management */}
+      <div className="mb-4">
+        <button onClick={() => toggle("risk")} className="w-full flex justify-between items-center p-3 bg-slate-100 dark:bg-white/5 rounded">
+          <div className="font-semibold">⚠️ {t.riskManagement}</div>
+          <div>{open.risk ? "−" : "+"}</div>
+        </button>
+        {open.risk && (
+          <div className="mt-3 grid lg:grid-cols-2 gap-6">
+            <div>
+              <InputGroup
+                label={t.returnFee}
+                name="returnFee"
+                value={premiumInputs.returnFee}
+                onChange={onPremiumInputChange}
+              />
+            </div>
 
             <div>
-              <label className="text-sm font-medium text-slate-600 dark:text-slate-300 mb-1 block">
+              <div className="text-sm font-medium text-slate-600 dark:text-slate-300 mb-1">
                 <Tooltip text={t.returnRateTooltip}>
                   <span>{t.returnRate}</span>
                 </Tooltip>
-              </label>
-              <div className="space-y-2">
+              </div>
+              <div>
                 <input
                   value={premiumInputs.returnRate}
                   onChange={(e) => onPremiumInputChange("returnRate", e.target.value)}
@@ -1094,13 +1137,13 @@ function RiskManagementTab({ result, inputs, premiumInputs, onPremiumInputChange
                   className="w-full p-3 rounded-lg bg-slate-200 dark:bg-white/5 placeholder:text-slate-400 outline-none focus:ring-2 focus:ring-indigo-400 transition"
                   placeholder="Enter return rate"
                 />
-                <div className="text-xs text-slate-500 flex items-center gap-2">
+                <div className="text-xs text-slate-500 flex items-center gap-2 mt-2">
                   <Info size={12} />
-                  {t.calculatedReturnRate}: {calculatedReturnRate.toFixed(2)}%
+                  {t.calculatedReturnRate}: {Number(calculatedReturnRate).toFixed(2)}% ({lang === "ar" ? "نسبة الفشل المحسوبة" : "computed failure rate"})
                   <button
                     type="button"
-                    onClick={() => onPremiumInputChange("returnRate", calculatedReturnRate.toFixed(2))}
-                    className="text-indigo-500 hover:text-indigo-600 text-xs underline"
+                    onClick={() => onPremiumInputChange("returnRate", Number(calculatedReturnRate).toFixed(2))}
+                    className="ml-3 text-indigo-500 hover:text-indigo-600 text-xs underline"
                   >
                     Use this value
                   </button>
@@ -1108,62 +1151,100 @@ function RiskManagementTab({ result, inputs, premiumInputs, onPremiumInputChange
               </div>
             </div>
           </div>
-        </div>
+        )}
+      </div>
 
-        {/* Risk Metrics */}
-        <div>
-          <h3 className="text-lg font-semibold mb-4">📊 {t.profitWithRisk}</h3>
-          <div className="space-y-3">
-            <Metric
-              label={t.expectedLoss}
-              value={moneyFmt(result.expectedLoss)}
-              className="bg-red-500/10 border border-red-500/30"
-            />
-            <Metric
-              label={t.riskAdjustedProfit}
-              value={moneyFmt(result.riskAdjustedProfit)}
-              className={
-                result.riskAdjustedProfit > 0
-                  ? "bg-green-500/10 border border-green-500/30"
-                  : "bg-red-500/10 border border-red-500/30"
-              }
-            />
+      {/* Accordion: Metrics */}
+      <div className="mb-4">
+        <button onClick={() => toggle("metrics")} className="w-full flex justify-between items-center p-3 bg-slate-100 dark:bg-white/5 rounded">
+          <div className="font-semibold">📊 {t.profitWithRisk}</div>
+          <div>{open.metrics ? "−" : "+"}</div>
+        </button>
+
+        {open.metrics && (
+          <div className="mt-3 space-y-3">
+            <div className="grid sm:grid-cols-2 gap-3">
+              <Metric
+                label={t.expectedLoss}
+                value={moneyFmt(result.expectedLoss)}
+                className="bg-red-500/10 border border-red-500/30"
+              />
+              <Metric
+                label={t.riskAdjustedProfit}
+                value={moneyFmt(result.riskAdjustedProfit)}
+                className={
+                  result.riskAdjustedProfit > 0
+                    ? "bg-green-500/10 border border-green-500/30"
+                    : "bg-red-500/10 border border-red-500/30"
+                }
+              />
+            </div>
+
             <div className="p-4 rounded-lg bg-slate-200 dark:bg-white/5">
               <div className="text-xs text-slate-500 dark:text-slate-400">
                 {lang === "ar" ? "عامل المخاطر" : "Facteur de Risque"}
               </div>
               <div className="text-2xl font-bold mt-2">
-                {result.net > 0 ? ((result.expectedLoss / result.net) * 100).toFixed(2) : "—"}%
+                {result.net > 0 ? ((result.expectedLoss / Math.abs(result.net)) * 100).toFixed(2) : "—"}%
               </div>
             </div>
           </div>
-        </div>
+        )}
       </div>
 
-      {/* Advanced Insights */}
-      <div className="mt-6 p-4 rounded-lg bg-gradient-to-r from-indigo-500/10 to-teal-500/10 border border-indigo-500/30">
-        <h3 className="font-semibold mb-3 flex items-center gap-2">
-          <TrendingUp size={18} />
-          Advanced Insights
-        </h3>
-        <div className="space-y-2 text-sm">
-          <p>
-            💡 Your profit per order is <strong>{moneyFmt(result.net)} DZD</strong>, but with a{" "}
-            <strong>{result.net > 0 ? ((result.expectedLoss / result.net) * 100).toFixed(2) : "—"}%</strong> risk factor
-            from returns.
-          </p>
-          <p>
-            📊 After accounting for returns, your adjusted profit is{" "}
-            <strong>{moneyFmt(result.riskAdjustedProfit)} DZD</strong> per successful order.
-          </p>
-          <p>
-            🎯 To maintain profitability with this risk level, ensure your success rate stays above{" "}
-            <strong>{result.net > 0 ? ((result.expectedLoss / result.net) * 100).toFixed(1) : "—"}%</strong>.
-          </p>
-        </div>
+      {/* Accordion: Advanced Insights */}
+      <div className="mb-4">
+        <button onClick={() => toggle("insights")} className="w-full flex justify-between items-center p-3 bg-slate-100 dark:bg-white/5 rounded">
+          <div className="font-semibold">💡 Advanced Insights</div>
+          <div>{open.insights ? "−" : "+"}</div>
+        </button>
+
+        {open.insights && (
+          <div className="mt-3 p-4 rounded-lg bg-gradient-to-r from-indigo-500/10 to-teal-500/10 border border-indigo-500/30 text-sm">
+            <p>
+              💡 Your profit per order is <strong>{moneyFmt(result.net)} DZD</strong>, but with a{" "}
+              <strong>{result.net > 0 ? ((result.expectedLoss / Math.abs(result.net)) * 100).toFixed(2) : "—"}%</strong> risk
+              from returns.
+            </p>
+            <p className="mt-2">
+              📊 After accounting for returns, your adjusted profit is <strong>{moneyFmt(result.riskAdjustedProfit)} DZD</strong> per successful order.
+            </p>
+            <p className="mt-2">
+              🎯 To maintain profitability with this risk level, ensure your success rate stays above{" "}
+              <strong>{result.net > 0 ? ((result.expectedLoss / Math.abs(result.net)) * 100).toFixed(1) : "—"}%</strong>.
+            </p>
+          </div>
+        )}
       </div>
 
-      {/* Break-Even Analysis with Returns */}
+      {/* Accordion: Batch Projection */}
+      <div className="mb-4">
+        <button onClick={() => toggle("projection")} className="w-full flex justify-between items-center p-3 bg-slate-100 dark:bg-white/5 rounded">
+          <div className="font-semibold">📈 Batch Profit Projection (100 Orders)</div>
+          <div>{open.projection ? "−" : "+"}</div>
+        </button>
+
+        {open.projection && (
+          <div className="mt-3 p-4 rounded-lg bg-slate-200 dark:bg-white/5">
+            <div className="grid sm:grid-cols-3 gap-3 text-sm">
+              <div>
+                <div className="text-slate-500">Total Revenue</div>
+                <div className="text-xl font-bold text-green-400">{moneyFmt(Number(inputs.price) * 100)} DZD</div>
+              </div>
+              <div>
+                <div className="text-slate-500">Total Costs</div>
+                <div className="text-xl font-bold text-red-400">{moneyFmt(result.totalCost * 100)} DZD</div>
+              </div>
+              <div>
+                <div className="text-slate-500">Net Profit (with risk)</div>
+                <div className="text-xl font-bold text-indigo-400">{moneyFmt(result.riskAdjustedProfit * 100)} DZD</div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Remaining insights - break-even, CLV, scaling */}
       <div className="mt-6 p-4 rounded-lg bg-slate-200 dark:bg-white/5">
         <h3 className="font-semibold mb-3">🎯 Break-Even Analysis with Returns</h3>
         <div className="grid sm:grid-cols-2 gap-3 text-sm">
@@ -1180,132 +1261,11 @@ function RiskManagementTab({ result, inputs, premiumInputs, onPremiumInputChange
         </div>
       </div>
 
-      {/* Batch Profit Projection */}
-      <div className="mt-6 p-4 rounded-lg bg-slate-200 dark:bg-white/5">
-        <h3 className="font-semibold mb-3">📈 Batch Profit Projection (100 Orders)</h3>
-        <div className="grid sm:grid-cols-3 gap-3 text-sm">
-          <div>
-            <div className="text-slate-500">Total Revenue</div>
-            <div className="text-xl font-bold text-green-400">{moneyFmt(Number(inputs.price) * 100)} DZD</div>
-          </div>
-          <div>
-            <div className="text-slate-500">Total Costs</div>
-            <div className="text-xl font-bold text-red-400">{moneyFmt(result.totalCost * 100)} DZD</div>
-          </div>
-          <div>
-            <div className="text-slate-500">Net Profit (with risk)</div>
-            <div className="text-xl font-bold text-indigo-400">{moneyFmt(result.riskAdjustedProfit * 100)} DZD</div>
-          </div>
-        </div>
-      </div>
-
-      {/* Scenario Planning */}
-      <div className="mt-6 p-4 rounded-lg bg-gradient-to-r from-purple-500/10 to-pink-500/10 border border-purple-500/30">
-        <h3 className="font-semibold mb-3 flex items-center gap-2">
-          <BarChart3 size={18} />
-          Scenario Planning
-        </h3>
-        <div className="space-y-3 text-sm">
-          <div className="p-3 rounded bg-slate-200 dark:bg-white/5">
-            <div className="font-semibold mb-1">🟢 Best Case (0% Returns)</div>
-            <div className="text-green-400">{moneyFmt(result.net * 100)} DZD for 100 orders</div>
-          </div>
-          <div className="p-3 rounded bg-slate-200 dark:bg-white/5">
-            <div className="font-semibold mb-1">🟡 Current Case ({Number(premiumInputs.returnRate)}% Returns)</div>
-            <div className="text-indigo-400">{moneyFmt(result.riskAdjustedProfit * 100)} DZD for 100 orders</div>
-          </div>
-          <div className="p-3 rounded bg-slate-200 dark:bg-white/5">
-            <div className="font-semibold mb-1">🔴 Worst Case (20% Returns)</div>
-            <div className="text-orange-400">
-              {moneyFmt((result.net - 0.2 * result.returnFee) * 100)} DZD for 100 orders
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Profitability Threshold */}
-      <div className="mt-6 p-4 rounded-lg bg-slate-200 dark:bg-white/5">
-        <h3 className="font-semibold mb-3">⚡ Profitability Threshold</h3>
-        <div className="space-y-2 text-sm">
-          <p>
-            Maximum acceptable return rate:{" "}
-            <strong>{result.returnFee > 0 ? ((result.net / result.returnFee) * 100).toFixed(2) : "—"}%</strong>
-          </p>
-          <p>
-            Minimum price to stay profitable: <strong>{moneyFmt(result.totalCost + result.expectedLoss)} DZD</strong>
-          </p>
-          <p>
-            Maximum ad spend per order: <strong>{moneyFmt(result.maxAd)} DZD</strong>
-          </p>
-        </div>
-      </div>
-
-      {/* Customer Lifetime Value */}
-      <div className="mt-6 p-4 rounded-lg bg-gradient-to-r from-cyan-500/10 to-blue-500/10 border border-cyan-500/30">
-        <h3 className="font-semibold mb-3 flex items-center gap-2">
-          <TrendingUp size={18} />
-          Customer Lifetime Value (CLV)
-        </h3>
-        <div className="space-y-2 text-sm">
-          <p>
-            If customers make 3 repeat purchases: <strong>{moneyFmt(result.riskAdjustedProfit * 3)} DZD</strong>
-          </p>
-          <p>
-            If customers make 5 repeat purchases: <strong>{moneyFmt(result.riskAdjustedProfit * 5)} DZD</strong>
-          </p>
-          <p className="text-xs text-slate-500 mt-2">
-            💡 Focus on customer retention to maximize lifetime value and reduce acquisition costs.
-          </p>
-        </div>
-      </div>
-
-      {/* Scaling Strategy */}
-      <div className="mt-6 p-4 rounded-lg bg-gradient-to-r from-emerald-500/10 to-teal-500/10 border border-emerald-500/30">
-        <h3 className="font-semibold mb-3 flex items-center gap-2">
-          <BarChart3 size={18} />
-          Scaling Strategy
-        </h3>
-        <div className="space-y-3 text-sm">
-          <div className="p-3 rounded bg-slate-200 dark:bg-white/5">
-            <div className="font-semibold mb-1">📊 Current Monthly Profit (1000 orders)</div>
-            <div className="text-green-400">{moneyFmt(result.riskAdjustedProfit * 1000)} DZD</div>
-          </div>
-          <div className="p-3 rounded bg-slate-200 dark:bg-white/5">
-            <div className="font-semibold mb-1">📈 If you 2x volume (2000 orders)</div>
-            <div className="text-indigo-400">{moneyFmt(result.riskAdjustedProfit * 2000)} DZD</div>
-          </div>
-          <div className="p-3 rounded bg-slate-200 dark:bg-white/5">
-            <div className="font-semibold mb-1">🚀 If you 5x volume (5000 orders)</div>
-            <div className="text-teal-400">{moneyFmt(result.riskAdjustedProfit * 5000)} DZD</div>
-          </div>
-        </div>
-      </div>
-
-      {/* Break-Even Orders */}
-      <div className="mt-6 p-4 rounded-lg bg-slate-200 dark:bg-white/5">
-        <h3 className="font-semibold mb-3">🎯 Break-Even Orders</h3>
-        <div className="space-y-2 text-sm">
-          <p>
-            Orders needed to break even:{" "}
-            <strong>{result.net > 0 ? Math.ceil(result.totalCost / result.net) : "—"}</strong> orders
-          </p>
-          <p>
-            Orders needed with return risk:{" "}
-            <strong>
-              {result.riskAdjustedProfit > 0 ? Math.ceil(result.totalCost / result.riskAdjustedProfit) : "—"}
-            </strong>{" "}
-            orders
-          </p>
-          <p className="text-xs text-slate-500 mt-2">
-            💡 After reaching break-even, every additional order is pure profit!
-          </p>
-        </div>
-      </div>
     </GlassCard>
   )
 }
 
-// Update InputForm with validation
+// InputForm (keeps validation and min/max)
 function InputForm({ inputs, onInputChange, onExport, onShare, t, onUndo, onRedo, canUndo, canRedo, onCalculate }) {
   const InputGroup = ({ label, name, value, onChange, type = "number", min, max, children, tooltip }) => (
     <div>
@@ -1325,7 +1285,7 @@ function InputForm({ inputs, onInputChange, onExport, onShare, t, onUndo, onRedo
           value={value}
           onChange={(e) => onChange(name, e.target.value)}
           type={type}
-          min={min || "0"} // Default min to 0 for all number inputs
+          min={min || "0"}
           max={max}
           className="w-full p-3 rounded-lg bg-slate-200 dark:bg-white/5 placeholder:text-slate-400 outline-none focus:ring-2 focus:ring-indigo-400 transition"
         />
@@ -1419,7 +1379,4 @@ function InputForm({ inputs, onInputChange, onExport, onShare, t, onUndo, onRedo
       </div>
     </GlassCard>
   )
-
-
-  // ... rest of InputForm remains the same but with proper min attributes
 }

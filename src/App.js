@@ -1,3 +1,4 @@
+// ...existing code...
 "use client"
 
 import { useEffect, useState, useCallback, useMemo, useRef } from "react"
@@ -1377,6 +1378,218 @@ function InputForm({ inputs, onInputChange, onExport, onShare, t, onUndo, onRedo
           <ActionButton onClick={onExport} icon={<Download size={16} />} text={t.export} primary={false} />
         </div>
       </div>
+    </GlassCard>
+  )
+}
+
+/* --------- Minimal missing components (safe, simple implementations) --------- */
+
+function Header({ lang, setLang, dark, setDark, t }) {
+  return (
+    <div className="flex items-center justify-between">
+      <div>
+        <h1 className="text-2xl font-bold">{t.title}</h1>
+        <div className="text-sm text-slate-500">{t.subtitle}</div>
+      </div>
+      <div className="flex items-center gap-3">
+        <button
+          onClick={() => setLang(lang === "ar" ? "fr" : "ar")}
+          className="px-3 py-1 rounded bg-slate-200 dark:bg-white/5"
+        >
+          {lang.toUpperCase()}
+        </button>
+        <button
+          onClick={() => setDark(!dark)}
+          className="p-2 rounded bg-slate-200 dark:bg-white/5"
+          title={dark ? t.light : t.dark}
+        >
+          {dark ? <Sun size={16} /> : <Moon size={16} />}
+        </button>
+      </div>
+    </div>
+  )
+}
+
+function GlassCard({ children, className = "" }) {
+  return <div className={`p-4 rounded-xl bg-white/80 dark:bg-slate-800/60 shadow ${className}`}>{children}</div>
+}
+
+function ActionButton({ onClick, icon, text, primary = true }) {
+  return (
+    <button
+      onClick={onClick}
+      className={`flex items-center gap-2 px-4 py-2 rounded-lg ${primary ? "bg-indigo-600 text-white" : "bg-slate-200 dark:bg-white/5"
+        }`}
+    >
+      {icon}
+      <span>{text}</span>
+    </button>
+  )
+}
+
+function DonationButton({ href, onClick, text, icon }) {
+  if (href) {
+    return (
+      <a href={href} target="_blank" rel="noreferrer" className="px-3 py-2 rounded bg-slate-200 dark:bg-white/5">
+        {text}
+      </a>
+    )
+  }
+  return (
+    <button onClick={onClick} className="px-3 py-2 rounded bg-slate-200 dark:bg-white/5 flex items-center gap-2">
+      {icon}
+      {text}
+    </button>
+  )
+}
+
+function BaridiMobModal({ t, isOpen, onClose }) {
+  if (!isOpen) return null
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      <div className="bg-black/40 absolute inset-0" onClick={onClose}></div>
+      <div className="bg-white dark:bg-slate-800 p-6 rounded-lg z-10 w-full max-w-md">
+        <h3 className="font-bold mb-2">{t.baridimobTitle}</h3>
+        <p className="mb-4 text-sm">{t.baridimobInstructions}</p>
+        <div className="flex gap-2">
+          <button onClick={() => { navigator.clipboard.writeText(CONFIG.donation.baridimob); toast.success(t.baridimobCopied) }} className="px-4 py-2 rounded bg-indigo-600 text-white">Copy</button>
+          <button onClick={onClose} className="px-4 py-2 rounded bg-slate-200">Close</button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function PresetModal({ t, isOpen, onClose, presetName, setPresetName, onSave }) {
+  if (!isOpen) return null
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      <div className="bg-black/40 absolute inset-0" onClick={onClose}></div>
+      <div className="bg-white dark:bg-slate-800 p-6 rounded-lg z-10 w-full max-w-sm">
+        <h3 className="font-bold mb-2">{t.savePreset}</h3>
+        <input value={presetName} onChange={(e) => setPresetName(e.target.value)} className="w-full p-2 mb-4 rounded border" placeholder={t.presetName} />
+        <div className="flex gap-2">
+          <button onClick={onSave} className="px-4 py-2 rounded bg-indigo-600 text-white">Save</button>
+          <button onClick={onClose} className="px-4 py-2 rounded bg-slate-200">Cancel</button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function PremiumModal({ t, isOpen, onClose, password, setPassword, onUnlock }) {
+  if (!isOpen) return null
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      <div className="bg-black/40 absolute inset-0" onClick={onClose}></div>
+      <div className="bg-white dark:bg-slate-800 p-6 rounded-lg z-10 w-full max-w-sm">
+        <h3 className="font-bold mb-2">{t.enterPassword}</h3>
+        <input value={password} onChange={(e) => setPassword(e.target.value)} type="password" className="w-full p-2 mb-4 rounded border" />
+        <div className="flex gap-2">
+          <button onClick={onUnlock} className="px-4 py-2 rounded bg-indigo-600 text-white">{t.unlock}</button>
+          <button onClick={onClose} className="px-4 py-2 rounded bg-slate-200">Cancel</button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function SupportAlertModal({ t, isOpen, onClose, onSupport }) {
+  if (!isOpen) return null
+  return (
+    <div className="fixed inset-0 z-50 flex items-center justify-center">
+      <div className="bg-black/40 absolute inset-0" onClick={onClose}></div>
+      <div className="bg-white dark:bg-slate-800 p-6 rounded-lg z-10 w-full max-w-md">
+        <h3 className="font-bold mb-2">{t.supportAlert}</h3>
+        <p className="text-sm mb-4">{t.supportAlertDesc}</p>
+        <div className="flex gap-2">
+          <button onClick={onSupport} className="px-4 py-2 rounded bg-indigo-600 text-white">{t.supportNow}</button>
+          <button onClick={onClose} className="px-4 py-2 rounded bg-slate-200">{t.notNow}</button>
+        </div>
+      </div>
+    </div>
+  )
+}
+
+function HistoryTab({ history, t, onLoadEntry, onClearHistory }) {
+  return (
+    <GlassCard>
+      <div className="flex justify-between items-center mb-3">
+        <h3 className="font-semibold">{t.history}</h3>
+        <button onClick={onClearHistory} className="px-3 py-1 rounded bg-slate-200"> {t.clearHistory} </button>
+      </div>
+      {!history.length ? <div className="text-slate-500">{t.noHistory}</div> : (
+        <div className="space-y-2">
+          {history.map((h, i) => (
+            <div key={i} className="p-2 rounded bg-slate-100 flex justify-between items-center">
+              <div>
+                <div className="text-sm">{new Date(h.timestamp).toLocaleString()}</div>
+                <div className="text-xs text-slate-500">{h.inputs.price} DZD</div>
+              </div>
+              <div>
+                <button onClick={() => onLoadEntry(h)} className="px-2 py-1 rounded bg-indigo-600 text-white">Load</button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </GlassCard>
+  )
+}
+
+function PresetsTab({ presets, t, onLoadPreset, onDeletePreset, onNewPreset }) {
+  return (
+    <GlassCard>
+      <div className="flex justify-between items-center mb-3">
+        <h3 className="font-semibold">{t.presets}</h3>
+        <button onClick={onNewPreset} className="px-3 py-1 rounded bg-slate-200">New</button>
+      </div>
+      {!presets.length ? <div className="text-slate-500">{t.noPresets}</div> : (
+        <div className="space-y-2">
+          {presets.map((p) => (
+            <div key={p.id} className="p-2 rounded bg-slate-100 flex justify-between items-center">
+              <div>{p.name}</div>
+              <div className="flex gap-2">
+                <button onClick={() => onLoadPreset(p)} className="px-2 py-1 rounded bg-indigo-600 text-white">Load</button>
+                <button onClick={() => onDeletePreset(p.id)} className="px-2 py-1 rounded bg-red-400 text-white">Del</button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </GlassCard>
+  )
+}
+
+function AnalyticsTab({ result, inputs, t, lang }) {
+  return (
+    <GlassCard>
+      <h3 className="font-semibold mb-3">{t.analytics}</h3>
+      {!result ? <div className="text-slate-500">{t.calculating}</div> : (
+        <div className="space-y-2">
+          <div>Success Rate: {(result.success * 100).toFixed(2)}%</div>
+          <div>Net profit per delivered order: {moneyFmt(result.net)} DZD</div>
+          <div>Effective ad cost: {moneyFmt(result.effAd)} DZD</div>
+        </div>
+      )}
+    </GlassCard>
+  )
+}
+
+function ComparisonTab({ comparison, t, onRemove }) {
+  return (
+    <GlassCard>
+      <h3 className="font-semibold mb-3">{t.comparison}</h3>
+      {!comparison.length ? <div className="text-slate-500">{t.noHistory}</div> : (
+        <div className="space-y-2">
+          {comparison.map((c, i) => (
+            <div key={i} className="p-2 rounded bg-slate-100 flex justify-between items-center">
+              <div>{c.inputs.price} DZD • {(c.result.success * 100).toFixed(1)}%</div>
+              <button onClick={() => onRemove(i)} className="px-2 py-1 rounded bg-red-400 text-white">Remove</button>
+            </div>
+          ))}
+        </div>
+      )}
     </GlassCard>
   )
 }

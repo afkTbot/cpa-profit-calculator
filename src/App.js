@@ -21,7 +21,6 @@ import {
   AlertTriangle,
   CheckCircle,
   Calculator,
-  HelpCircle,
 } from "lucide-react"
 
 // --- CONFIGURATION ---
@@ -39,9 +38,10 @@ const CONFIG = {
     price: "4950",
     conf: "50",
     del: "50",
-    currency: "DZD",
+    currency: "DZD", // Added default currency
   },
   exchangeRates: {
+    // Renamed initialRates to exchangeRates
     DZD: 1,
     USD: 134.5,
     EUR: 145.2,
@@ -62,7 +62,7 @@ const TRANSLATIONS = {
     del: "نسبة التوصيل (%)",
     currency: "العملة",
     calc: "احسب",
-    calculate: "احسب الآن",
+    calculate: "احسب الآن", // Added "calculate" translation
     share: "نسخ الرابط",
     export: "تصدير",
     dark: "الوضع الداكن",
@@ -75,7 +75,7 @@ const TRANSLATIONS = {
     effAd: "تكلفة الإعلان الفعلية (لكل طلب ناجح)",
     totalCost: "التكلفة الإجمالية (لكل طلب ناجح)",
     resultStatus: (net) => (net < 0 ? "خسارة: حاول تخفيض تكلفة الإعلان أو زيادة السعر." : "مربح: عمل جيد، استمر!"),
-    calculating: "أدخل الأرقام واضغط احسب",
+    calculating: "أدخل الأرقام واضغط احسب", // Updated calculating text
     copied: "تم نسخ الرابط بنجاح!",
     copyFailed: "فشل النسخ.",
     baridimobTitle: "الدفع عبر بريدي موب",
@@ -85,7 +85,7 @@ const TRANSLATIONS = {
     presets: "القوالب المحفوظة",
     analytics: "التحليلات",
     comparison: "المقارنة",
-    riskManagement: "إدارة المخاطر", // Changed from premium
+    premium: "ميزات متقدمة",
     savePreset: "حفظ كقالب",
     presetName: "اسم القالب",
     breakEven: "نقطة التعادل",
@@ -108,7 +108,7 @@ const TRANSLATIONS = {
     profitWithRisk: "الربح مع المخاطر",
     expectedLoss: "الخسارة المتوقعة من الإرجاع",
     riskAdjustedProfit: "الربح المعدل بالمخاطر",
-    riskManagementFeatures: "ميزات إدارة المخاطر", // Changed from premiumFeatures
+    premiumFeatures: "الميزات المتقدمة",
     enterPassword: "أدخل كلمة المرور",
     unlock: "فتح",
     locked: "مقفول",
@@ -118,10 +118,12 @@ const TRANSLATIONS = {
     supportAlertDesc: "يمكنك المساهمة بأي مبلغ لدعم تطوير هذه الأداة المجانية.",
     notNow: "ليس الآن",
     supportNow: "ادعم الآن",
-    failureRate: "نسبة الفشل الإجمالية",
-    failureRateTooltip: "نسبة الطلبات التي فشلت (لم يتم تأكيدها أو لم يتم توصيلها)",
-    returnRateTooltip: "نسبة الطلبات المسلمة التي تم إرجاعها من قبل الزبون",
-    calculatedReturnRate: "نسبة الإرجاع المحسوبة",
+    tauxRetour: "نسبة الإرجاع المحسوبة", // Added Taux de Retour translation
+    tauxEchec: "نسبة الفشل (عدم التأكيد أو عدم التوصيل)",
+    tauxEchecDesc:
+      "النسبة المئوية للطلبات التي لم تُؤكد أو لم تُسلم بنجاح. تُحسب من: 100% - (نسبة التأكيد × نسبة التوصيل)",
+    tauxRetourClient: "نسبة إرجاع العملاء",
+    tauxRetourClientDesc: "النسبة المئوية للطلبات المسلمة بنجاح التي يرجعها العملاء لاحقاً (مختلفة تماماً عن نسبة الفشل)",
   },
   fr: {
     title: "Calculateur de Profit COD — Algérie",
@@ -134,7 +136,7 @@ const TRANSLATIONS = {
     del: "Taux de livraison (%)",
     currency: "Devise",
     calc: "Calculer",
-    calculate: "Calculer maintenant",
+    calculate: "Calculer maintenant", // Added "calculate" translation
     share: "Copier le lien",
     export: "Exporter",
     dark: "Mode sombre",
@@ -150,7 +152,7 @@ const TRANSLATIONS = {
       net < 0
         ? "Perte : Essayez de réduire le coût pub ou d'augmenter le prix."
         : "Rentable : Excellent travail, continuez !",
-    calculating: "Entrez les valeurs et cliquez sur Calculer",
+    calculating: "Entrez les valeurs et cliquez sur Calculer", // Updated calculating text
     copied: "Lien copié avec succès !",
     copyFailed: "La copie a échoué.",
     baridimobTitle: "Paiement par BaridiMob",
@@ -161,7 +163,7 @@ const TRANSLATIONS = {
     presets: "Modèles enregistrés",
     analytics: "Analyses",
     comparison: "Comparaison",
-    riskManagement: "Gestion des Risques", // Changed from premium
+    premium: "Fonctionnalités avancées",
     savePreset: "Enregistrer comme modèle",
     presetName: "Nom du modèle",
     breakEven: "Point d'équilibre",
@@ -184,7 +186,7 @@ const TRANSLATIONS = {
     profitWithRisk: "Profit avec risques",
     expectedLoss: "Perte attendue des retours",
     riskAdjustedProfit: "Profit ajusté au risque",
-    riskManagementFeatures: "Fonctionnalités de gestion des risques", // Changed from premiumFeatures
+    premiumFeatures: "Fonctionnalités avancées",
     enterPassword: "Entrez le mot de passe",
     unlock: "Déverrouiller",
     locked: "Verrouillé",
@@ -195,53 +197,15 @@ const TRANSLATIONS = {
       "Vous pouvez contribuer n'importe quel montant pour soutenir le développement de cet outil gratuit.",
     notNow: "Pas maintenant",
     supportNow: "Soutenir maintenant",
-    failureRate: "Taux d'échec global",
-    failureRateTooltip: "Pourcentage de commandes qui ont échoué (non confirmées ou non livrées)",
-    returnRateTooltip: "Pourcentage de commandes livrées qui ont été retournées par le client",
-    calculatedReturnRate: "Taux de retour calculé",
+    tauxRetour: "Taux de retour calculé", // Added Taux de Retour translation
+    tauxEchec: "Taux d'échec (non-confirmation ou non-livraison)",
+    tauxEchecDesc:
+      "Pourcentage de commandes non confirmées ou non livrées avec succès. Calculé à partir de: 100% - (Taux de confirmation × Taux de livraison)",
+    tauxRetourClient: "Taux de retour client",
+    tauxRetourClientDesc:
+      "Pourcentage de commandes livrées avec succès que les clients retournent ultérieurement (complètement différent du taux d'échec)",
   },
 }
-
-// --- INPUT VALIDATION ---
-const validateInput = (name, value) => {
-  const numValue = Number(value)
-
-  if (isNaN(numValue)) return value
-
-  // Prevent negative numbers
-  if (numValue < 0) return "0"
-
-  // Prevent percentages over 100
-  if (["conf", "del", "returnRate"].includes(name) && numValue > 100) return "100"
-
-  return value
-}
-
-// --- TOOLTIP COMPONENT ---
-const Tooltip = ({ text, children }) => {
-  const [showTooltip, setShowTooltip] = useState(false)
-
-  return (
-    <div className="relative inline-block">
-      <div
-        onMouseEnter={() => setShowTooltip(true)}
-        onMouseLeave={() => setShowTooltip(false)}
-        className="inline-flex items-center"
-      >
-        {children}
-        <HelpCircle size={14} className="ml-1 text-slate-400 cursor-help" />
-      </div>
-      {showTooltip && (
-        <div className="absolute z-50 bottom-full left-0 mb-2 px-3 py-2 text-xs text-white bg-slate-800 rounded-lg shadow-lg max-w-xs">
-          {text}
-          <div className="absolute top-full left-4 border-4 border-transparent border-t-slate-800"></div>
-        </div>
-      )}
-    </div>
-  )
-}
-
-// ... (keep all the existing helper functions and generateSmartTips the same)
 
 // --- HELPER FUNCTIONS ---
 function moneyFmt(num) {
@@ -435,24 +399,6 @@ export default function App() {
 
   const t = TRANSLATIONS[lang]
 
-  // Calculate return rate from home tab inputs
-  const calculatedReturnRate = useMemo(() => {
-    const conf = Number(inputs.conf) / 100 || 0
-    const del = Number(inputs.del) / 100 || 0
-    const success = conf * del
-    return (1 - success) * 100 // This is the failure rate that can be used as suggested return rate
-  }, [inputs.conf, inputs.del])
-
-  // Auto-update premium inputs when home inputs change
-  useEffect(() => {
-    if (premiumUnlocked) {
-      setPremiumInputs(prev => ({
-        ...prev,
-        calculatedReturnRate: calculatedReturnRate.toFixed(2)
-      }))
-    }
-  }, [calculatedReturnRate, premiumUnlocked])
-
   // --- THEME EFFECT ---
   useEffect(() => {
     document.documentElement.classList.toggle("dark", dark)
@@ -462,6 +408,7 @@ export default function App() {
   // --- URL SYNC EFFECT ---
   useEffect(() => {
     if (typeof window !== "undefined" && result) {
+      // Only sync URL if there's a result
       const params = new URLSearchParams(inputs)
       window.history.replaceState(null, "", `?${params.toString()}`)
     }
@@ -489,13 +436,13 @@ export default function App() {
             localStorage.setItem("cod-support-alert-shown", "true")
           },
           3 * 60 * 1000,
-        )
+        ) // 3 minutes
         return () => clearTimeout(timer)
       }
     }
   }, [])
 
-  // --- CORRECTED CALCULATION LOGIC ---
+  // --- CALCULATION LOGIC ---
   const calculate = useCallback(() => {
     // Convert all values to DZD based on selected currency
     const exchangeRate = CONFIG.exchangeRates[inputs.currency] || 1
@@ -511,22 +458,23 @@ export default function App() {
     const conf = Number(inputs.conf) / 100 || 0
     const del = Number(inputs.del) / 100 || 0
 
-    // CORRECTED CALCULATIONS
-    const success = conf * del
-    const failureRate = (1 - success) * 100
+    // Return Rate = 100% - (Confirmation Rate × Delivery Rate)
+    const successRate = conf * del
+    const returnRate = (1 - successRate) * 100
 
-    // Handle edge case where success rate is 0
-    const effAd = success > 0.001 ? ad / success : ad * 1000
+    const success = successRate
+    const effAd = success <= 0.01 ? ad * 100 : ad / success
     const totalCost = product + shipping + effAd
     const net = price - totalCost
     const margin = price === 0 ? 0 : (net / price) * 100
-    const maxAd = success > 0 ? success * (price - product - shipping) : 0
 
-    const breakEven = totalCost
-    const roi = totalCost > 0 ? (net / totalCost) * 100 : 0
+    // Calculate maxAd based on success rate, ensuring it's not negative
+    const maxAd = success > 0 ? Math.max(0, success * (price - product - shipping)) : 0
+
+    const breakEven = product + shipping
+    const roi = totalCost === 0 ? 0 : (net / totalCost) * 100
     const projectedProfit = net * 100
 
-    // CORRECTED RISK CALCULATIONS
     const returnFee = toDZD(premiumInputs.returnFee)
     const returnRatePercent = Number(premiumInputs.returnRate) / 100 || 0
 
@@ -544,11 +492,10 @@ export default function App() {
       roi,
       projectedProfit,
       returnFee,
-      failureRate,
+      returnRate,
       returnRatePercent,
       expectedLoss,
       riskAdjustedProfit,
-      calculatedReturnRate, // Add this to results
     }
     setResult(results)
 
@@ -559,24 +506,38 @@ export default function App() {
     localStorage.setItem("cod-history", JSON.stringify(newHistory))
 
     return results
-  }, [inputs, premiumInputs]) // Fixed dependencies
+  }, [inputs, premiumInputs])
 
-  // --- HANDLERS with VALIDATION ---
+  // --- HANDLERS ---
   const handleInputChange = (key, value) => {
-    const validatedValue = validateInput(key, value)
+    let validatedValue = value
+
+    // Validate percentage fields
+    if (key === "conf" || key === "del") {
+      const numValue = Number(value)
+      if (numValue < 0) validatedValue = "0"
+      if (numValue > 100) validatedValue = "100"
+    }
+
+    // Validate numeric fields (prevent negative)
+    if (["product", "shipping", "ad", "price"].includes(key)) {
+      const numValue = Number(value)
+      if (numValue < 0) validatedValue = "0"
+    }
+
     setInputs((prev) => ({ ...prev, [key]: validatedValue }))
   }
 
   const handlePremiumInputChange = (key, value) => {
-    const validatedValue = validateInput(key, value)
     setPremiumInputs((prev) => {
-      const updated = { ...prev, [key]: validatedValue }
+      const updated = { ...prev, [key]: value }
       localStorage.setItem("cod-premium-inputs", JSON.stringify(updated))
       return updated
     })
   }
 
   const handleCalculate = () => {
+    // Created dedicated handler for calculation button
     calculate()
     toast.success("Calculation completed!")
   }
@@ -593,19 +554,6 @@ export default function App() {
     }
   }
 
-  // --- TAB ACCESS CONTROL ---
-  const handleTabClick = (tabId) => {
-    const premiumTabs = ["analytics", "comparison", "riskManagement"]
-
-    if (premiumTabs.includes(tabId) && !premiumUnlocked) {
-      setShowPremiumModal(true)
-    } else {
-      setActiveTab(tabId)
-    }
-  }
-
-
-  // ... (rest of your handlers remain the same)
   const copyShareLink = () => {
     navigator.clipboard
       .writeText(window.location.href)
@@ -738,8 +686,6 @@ export default function App() {
     toast.success("History cleared!")
   }
 
-
-
   return (
     <>
       <Toaster
@@ -787,22 +733,28 @@ export default function App() {
               { id: "analytics", label: t.analytics, icon: "📊", premium: true },
               { id: "comparison", label: t.comparison, icon: "⚖️", premium: true },
               {
-                id: "riskManagement", // Changed from premium
-                label: t.riskManagement, // Changed label
+                id: "riskManagement",
+                label: "إدارة المخاطر",
+                labelFr: "Gestion des Risques",
                 icon: premiumUnlocked ? "🔓" : "🔒",
                 premium: true,
               },
             ].map((tab) => (
               <button
                 key={tab.id}
-                onClick={() => handleTabClick(tab.id)}
+                onClick={() => {
+                  if ((tab.premium || tab.id === "riskManagement") && !premiumUnlocked) {
+                    setShowPremiumModal(true)
+                  } else {
+                    setActiveTab(tab.id)
+                  }
+                }}
                 className={`px-4 py-2 rounded-lg font-semibold transition-all ${activeTab === tab.id
-                  ? "bg-gradient-to-r from-teal-400 to-indigo-500 text-slate-900 shadow-lg"
-                  : "bg-slate-200 dark:bg-white/10 hover:bg-slate-300 dark:hover:bg-white/20"
-                  } ${tab.premium && !premiumUnlocked ? "opacity-70" : ""}`}
-                title={tab.premium && !premiumUnlocked ? t.locked : ""}
+                    ? "bg-gradient-to-r from-teal-400 to-indigo-500 text-slate-900 shadow-lg"
+                    : "bg-slate-200 dark:bg-white/10 hover:bg-slate-300 dark:hover:bg-white/20"
+                  }`}
               >
-                {tab.icon} {tab.label}
+                {tab.icon} {lang === "ar" ? tab.label : tab.labelFr || tab.label}
               </button>
             ))}
           </div>
@@ -861,32 +813,16 @@ export default function App() {
             <ComparisonTab comparison={comparison} t={t} onRemove={removeFromComparison} />
           )}
 
-          {activeTab === "riskManagement" && premiumUnlocked && ( // Changed from premium
-            <RiskManagementTab // Changed component name
+          {activeTab === "riskManagement" && premiumUnlocked && (
+            <PremiumTab
               result={result}
               inputs={inputs}
               premiumInputs={premiumInputs}
               onPremiumInputChange={handlePremiumInputChange}
+              onRecalculate={handleCalculate}
               t={t}
-              calculatedReturnRate={calculatedReturnRate}
+              lang={lang}
             />
-          )}
-
-          {/* Show locked message for premium tabs */}
-          {(activeTab === "analytics" || activeTab === "comparison" || activeTab === "riskManagement") && !premiumUnlocked && (
-            <GlassCard className="mt-6 text-center py-12">
-              <Lock size={48} className="mx-auto mb-4 text-slate-400" />
-              <h3 className="text-xl font-bold mb-2">{t.locked}</h3>
-              <p className="text-slate-600 dark:text-slate-300 mb-4">
-                {t.riskManagementFeatures} {t.enterPassword}
-              </p>
-              <button
-                onClick={() => setShowPremiumModal(true)}
-                className="px-6 py-3 rounded-lg bg-gradient-to-r from-teal-400 to-indigo-500 text-slate-900 font-semibold hover:opacity-90 transition"
-              >
-                {t.unlock}
-              </button>
-            </GlassCard>
           )}
 
           <footer className="mt-8 text-center text-sm text-slate-500 dark:text-slate-400">
@@ -898,7 +834,150 @@ export default function App() {
   )
 }
 
-// In your ResultsDisplay component, add tooltips:
+// --- CHILD COMPONENTS ---
+
+function Header({ lang, setLang, dark, setDark, t }) {
+  return (
+    <header className="flex items-center justify-between gap-4 flex-wrap">
+      <div className="flex items-center gap-4">
+        <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-teal-400 to-indigo-500 flex items-center justify-center text-slate-900 font-extrabold text-2xl shadow-lg">
+          COD
+        </div>
+        <div>
+          <h1 className="text-xl md:text-2xl font-bold">{t.title}</h1>
+          <p className="text-sm text-slate-600 dark:text-slate-300">{t.subtitle}</p>
+        </div>
+      </div>
+      <div className="flex items-center gap-2">
+        <button
+          onClick={() => setLang((l) => (l === "ar" ? "fr" : "ar"))}
+          className="px-3 py-2 rounded-lg bg-slate-200 dark:bg-white/10 hover:bg-slate-300 dark:hover:bg-white/20 transition font-medium"
+        >
+          {lang === "ar" ? "FR" : "AR"}
+        </button>
+        <button
+          onClick={() => setDark((d) => !d)}
+          title={dark ? t.light : t.dark}
+          className="p-2.5 rounded-lg bg-slate-200 dark:bg-white/10 hover:bg-slate-300 dark:hover:bg-white/20 transition"
+        >
+          {dark ? <Sun size={20} /> : <Moon size={20} />}
+        </button>
+      </div>
+    </header>
+  )
+}
+
+function InputForm({ inputs, onInputChange, onExport, onShare, t, onUndo, onRedo, canUndo, canRedo, onCalculate }) {
+  const InputGroup = ({ label, name, value, onChange, type = "number", min, max, children }) => (
+    <div>
+      <label htmlFor={name} className="text-sm font-medium text-slate-600 dark:text-slate-300">
+        {label}
+      </label>
+      <div className="relative mt-1">
+        <input
+          id={name}
+          name={name}
+          value={value}
+          onChange={(e) => onChange(name, e.target.value)}
+          type={type}
+          min={min}
+          max={max}
+          className="w-full p-3 rounded-lg bg-slate-200 dark:bg-white/5 placeholder:text-slate-400 outline-none focus:ring-2 focus:ring-indigo-400 transition"
+          autoComplete="off"
+        />
+        {children}
+      </div>
+    </div>
+  )
+
+  return (
+    <GlassCard>
+      <div className="grid gap-4">
+        <div className="flex gap-2">
+          <button
+            onClick={onUndo}
+            disabled={!canUndo}
+            className="p-2 rounded-lg bg-slate-200 dark:bg-white/10 hover:bg-slate-300 dark:hover:bg-white/20 disabled:opacity-50 transition"
+            title={t.undo}
+          >
+            <RotateCcw size={18} />
+          </button>
+          <button
+            onClick={onRedo}
+            disabled={!canRedo}
+            className="p-2 rounded-lg bg-slate-200 dark:bg-white/10 hover:bg-slate-300 dark:hover:bg-white/20 disabled:opacity-50 transition"
+            title={t.redo}
+          >
+            <RotateCw size={18} />
+          </button>
+        </div>
+
+        <div>
+          <label htmlFor="currency" className="text-sm font-medium text-slate-600 dark:text-slate-300">
+            {t.currency}
+          </label>
+          <select
+            id="currency"
+            value={inputs.currency}
+            onChange={(e) => onInputChange("currency", e.target.value)}
+            className="w-full p-3 rounded-lg bg-slate-200 dark:bg-white/5 outline-none focus:ring-2 focus:ring-indigo-400 transition mt-1"
+          >
+            <option value="DZD">DZD (دج)</option>
+            <option value="USD">USD ($)</option>
+            <option value="EUR">EUR (€)</option>
+          </select>
+        </div>
+
+        <InputGroup
+          label={`${t.product} (${inputs.currency})`}
+          name="product"
+          value={inputs.product}
+          onChange={onInputChange}
+        />
+
+        <div className="grid sm:grid-cols-2 gap-4">
+          <InputGroup
+            label={`${t.shipping} (${inputs.currency})`}
+            name="shipping"
+            value={inputs.shipping}
+            onChange={onInputChange}
+          />
+          <InputGroup label={`${t.ad} (${inputs.currency})`} name="ad" value={inputs.ad} onChange={onInputChange} />
+        </div>
+
+        <InputGroup
+          label={`${t.price} (${inputs.currency})`}
+          name="price"
+          value={inputs.price}
+          onChange={onInputChange}
+        />
+
+        <div className="grid sm:grid-cols-2 gap-4">
+          <InputGroup label={t.conf} name="conf" value={inputs.conf} onChange={onInputChange} min="0" max="100">
+            <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-slate-400">%</div>
+          </InputGroup>
+          <InputGroup label={t.del} name="del" value={inputs.del} onChange={onInputChange} min="0" max="100">
+            <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-slate-400">%</div>
+          </InputGroup>
+        </div>
+
+        <button
+          onClick={onCalculate}
+          className="w-full py-3 rounded-lg bg-gradient-to-r from-teal-400 to-indigo-500 text-slate-900 font-bold hover:opacity-90 transition flex items-center justify-center gap-2 shadow-lg"
+        >
+          <Calculator size={20} />
+          {t.calculate}
+        </button>
+
+        <div className="flex gap-2 flex-wrap">
+          <ActionButton onClick={onShare} icon={<LinkIcon size={16} />} text={t.share} primary={false} />
+          <ActionButton onClick={onExport} icon={<Download size={16} />} text={t.export} primary={false} />
+        </div>
+      </div>
+    </GlassCard>
+  )
+}
+
 function ResultsDisplay({ result, t, onBaridiMobClick, onAddComparison, onSavePreset }) {
   const resultData = useMemo(() => {
     if (!result) return null
@@ -950,15 +1029,6 @@ function ResultsDisplay({ result, t, onBaridiMobClick, onAddComparison, onSavePr
             <Metric label={t.maxAd} value={moneyFmt(resultData.maxAd)} />
             <Metric label={t.effAd} value={moneyFmt(resultData.effAd)} />
             <Metric label={t.totalCost} value={moneyFmt(resultData.totalCost)} />
-            <Metric
-              label={
-                <Tooltip text={t.failureRateTooltip}>
-                  <span>{t.failureRate}</span>
-                </Tooltip>
-              }
-              value={`${resultData.failureRate.toFixed(2)}`}
-              currency="%"
-            />
           </div>
 
           <div className="grid sm:grid-cols-2 gap-3">
@@ -991,8 +1061,6 @@ function ResultsDisplay({ result, t, onBaridiMobClick, onAddComparison, onSavePr
               <DonationButton href={CONFIG.donation.redotpay} text="RedotPay" />
             </div>
           </div>
-
-
         </>
       ) : (
         <div className="flex items-center justify-center h-full text-slate-500">{t.calculating}</div>
@@ -1001,8 +1069,228 @@ function ResultsDisplay({ result, t, onBaridiMobClick, onAddComparison, onSavePr
   )
 }
 
-// Rename PremiumTab to RiskManagementTab and add the connection
-function RiskManagementTab({ result, inputs, premiumInputs, onPremiumInputChange, t, calculatedReturnRate }) {
+function HistoryTab({ history, t, onLoadEntry, onClearHistory }) {
+  return (
+    <GlassCard className="mt-6">
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-xl font-bold">{t.history}</h2>
+        {history.length > 0 && (
+          <button
+            onClick={onClearHistory}
+            className="px-3 py-2 rounded-lg bg-red-500 text-white hover:bg-red-600 transition flex items-center gap-2"
+          >
+            <Trash2 size={16} /> {t.clearHistory}
+          </button>
+        )}
+      </div>
+      {history.length === 0 ? (
+        <p className="text-slate-500">{t.noHistory}</p>
+      ) : (
+        <div className="space-y-2 max-h-96 overflow-y-auto">
+          {history.map((entry, idx) => (
+            <div key={idx} className="p-3 rounded-lg bg-slate-200 dark:bg-white/5 flex justify-between items-center">
+              <div className="text-sm">
+                <div className="font-semibold">Profit: {moneyFmt(entry.result.net)} DZD</div>
+                <div className="text-xs text-slate-500">{new Date(entry.timestamp).toLocaleString()}</div>
+              </div>
+              <button
+                onClick={() => onLoadEntry(entry)}
+                className="px-3 py-1 rounded bg-indigo-500 text-white hover:bg-indigo-600 transition text-sm"
+              >
+                Load
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
+    </GlassCard>
+  )
+}
+
+function PresetsTab({ presets, t, onLoadPreset, onDeletePreset, onNewPreset }) {
+  return (
+    <GlassCard className="mt-6">
+      <div className="flex justify-between items-center mb-4">
+        <h2 className="text-xl font-bold">{t.presets}</h2>
+        <button
+          onClick={onNewPreset}
+          className="px-3 py-2 rounded-lg bg-gradient-to-r from-teal-400 to-indigo-500 text-slate-900 hover:opacity-90 transition flex items-center gap-2"
+        >
+          <Plus size={16} /> New
+        </button>
+      </div>
+      {presets.length === 0 ? (
+        <p className="text-slate-500">{t.noPresets}</p>
+      ) : (
+        <div className="grid gap-3">
+          {presets.map((preset) => (
+            <div
+              key={preset.id}
+              className="p-4 rounded-lg bg-slate-200 dark:bg-white/5 flex justify-between items-center"
+            >
+              <div>
+                <div className="font-semibold">{preset.name}</div>
+                <div className="text-sm text-slate-500">
+                  Price: {preset.inputs.price} {preset.inputs.currency}
+                </div>
+              </div>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => onLoadPreset(preset)}
+                  className="px-3 py-1 rounded bg-indigo-500 text-white hover:bg-indigo-600 transition text-sm"
+                >
+                  Load
+                </button>
+                <button
+                  onClick={() => onDeletePreset(preset.id)}
+                  className="px-3 py-1 rounded bg-red-500 text-white hover:bg-red-600 transition text-sm"
+                >
+                  Delete
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </GlassCard>
+  )
+}
+
+function AnalyticsTab({ result, inputs, t, lang }) {
+  if (!result) {
+    return (
+      <GlassCard className="mt-6">
+        <p className="text-slate-500">{t.calculating}</p>
+      </GlassCard>
+    )
+  }
+
+  const tips = generateSmartTips(inputs, result)
+
+  return (
+    <GlassCard className="mt-6">
+      <h2 className="text-xl font-bold mb-4">{t.analytics}</h2>
+      <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+        <div className="p-4 rounded-lg bg-slate-200 dark:bg-white/5">
+          <div className="text-sm text-slate-500">{t.breakEven}</div>
+          <div className="text-2xl font-bold mt-2">{moneyFmt(result.breakEven)} DZD</div>
+        </div>
+        <div className="p-4 rounded-lg bg-slate-200 dark:bg-white/5">
+          <div className="text-sm text-slate-500">{t.roi}</div>
+          <div className="text-2xl font-bold mt-2 text-green-400">{result.roi.toFixed(2)}%</div>
+        </div>
+        <div className="p-4 rounded-lg bg-slate-200 dark:bg-white/5">
+          <div className="text-sm text-slate-500">{t.projectedProfit}</div>
+          <div className="text-2xl font-bold mt-2 text-indigo-400">{moneyFmt(result.projectedProfit)} DZD</div>
+        </div>
+        <div className="p-4 rounded-lg bg-slate-200 dark:bg-white/5">
+          <div className="text-sm text-slate-500">Success Rate</div>
+          <div className="text-2xl font-bold mt-2">{(result.success * 100).toFixed(2)}%</div>
+        </div>
+        <div className="p-4 rounded-lg bg-slate-200 dark:bg-white/5">
+          <div className="text-sm text-slate-500">Profit Margin</div>
+          <div className="text-2xl font-bold mt-2">{result.margin.toFixed(2)}%</div>
+        </div>
+        <div className="p-4 rounded-lg bg-slate-200 dark:bg-white/5">
+          <div className="text-sm text-slate-500">Taux de Retour</div>
+          <div className="text-2xl font-bold mt-2 text-orange-400">{result.returnRate.toFixed(2)}%</div>
+        </div>
+      </div>
+
+      {tips.length > 0 && (
+        <div className="mt-6">
+          <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
+            <TrendingUp size={20} />
+            {t.tips}
+          </h3>
+          <div className="space-y-3">
+            {tips.map((tip, idx) => {
+              const bgColor =
+                tip.type === "error"
+                  ? "bg-red-500/10 border-red-500/30"
+                  : tip.type === "warning"
+                    ? "bg-yellow-500/10 border-yellow-500/30"
+                    : tip.type === "success"
+                      ? "bg-green-500/10 border-green-500/30"
+                      : "bg-blue-500/10 border-blue-500/30"
+
+              const iconColor =
+                tip.type === "error"
+                  ? "text-red-500"
+                  : tip.type === "warning"
+                    ? "text-yellow-500"
+                    : tip.type === "success"
+                      ? "text-green-500"
+                      : "text-blue-500"
+
+              const Icon = tip.type === "error" ? AlertTriangle : tip.type === "success" ? CheckCircle : AlertCircle
+
+              return (
+                <div key={idx} className={`p-4 rounded-lg border ${bgColor} flex gap-3`}>
+                  <Icon size={20} className={`flex-shrink-0 mt-0.5 ${iconColor}`} />
+                  <p className="text-sm">{lang === "ar" ? tip.text : tip.textFr}</p>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      )}
+    </GlassCard>
+  )
+}
+
+function ComparisonTab({ comparison, t, onRemove }) {
+  if (comparison.length === 0) {
+    return (
+      <GlassCard className="mt-6">
+        <p className="text-slate-500">No scenarios to compare</p>
+      </GlassCard>
+    )
+  }
+
+  return (
+    <GlassCard className="mt-6">
+      <h2 className="text-xl font-bold mb-4">{t.compareScenarios}</h2>
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-slate-300 dark:border-white/10">
+              <th className="text-left p-2">Product</th>
+              <th className="text-left p-2">Price</th>
+              <th className="text-left p-2">Success Rate</th>
+              <th className="text-left p-2">Net Profit</th>
+              <th className="text-left p-2">Margin</th>
+              <th className="text-left p-2">ROI</th>
+              <th className="text-left p-2">Action</th>
+            </tr>
+          </thead>
+          <tbody>
+            {comparison.map((item, idx) => (
+              <tr
+                key={idx}
+                className="border-b border-slate-300 dark:border-white/10 hover:bg-slate-200 dark:hover:bg-white/5"
+              >
+                <td className="p-2">{item.inputs.product}</td>
+                <td className="p-2">{item.inputs.price}</td>
+                <td className="p-2">{(item.result.success * 100).toFixed(2)}%</td>
+                <td className="p-2 font-semibold">{moneyFmt(item.result.net)}</td>
+                <td className="p-2">{item.result.margin.toFixed(2)}%</td>
+                <td className="p-2">{item.result.roi.toFixed(2)}%</td>
+                <td className="p-2">
+                  <button onClick={() => onRemove(idx)} className="text-red-500 hover:text-red-600">
+                    Remove
+                  </button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </GlassCard>
+  )
+}
+
+function PremiumTab({ result, inputs, premiumInputs, onPremiumInputChange, onRecalculate, t, lang }) {
   if (!result) {
     return (
       <GlassCard className="mt-6">
@@ -1058,55 +1346,78 @@ function RiskManagementTab({ result, inputs, premiumInputs, onPremiumInputChange
   const breakEvenPrice = result.totalCost
   const breakEvenWithReturns = result.totalCost + result.expectedLoss
 
-
   return (
     <GlassCard className="mt-6">
       <h2 className="text-xl font-bold mb-6 flex items-center gap-2">
         <Lock size={20} />
-        {t.riskManagementFeatures} {/* Changed title */}
+        {t.premiumFeatures}
       </h2>
+
+      <div className="mb-6 p-4 rounded-lg bg-gradient-to-r from-blue-500/10 to-cyan-500/10 border border-blue-500/30">
+        <h3 className="font-semibold mb-3 flex items-center gap-2">
+          <Info size={18} className="text-blue-500" />
+          {lang === "ar" ? "شرح الفرق بين نسبة الفشل ونسبة الإرجاع" : "Différence entre Taux d'Échec et Taux de Retour"}
+        </h3>
+        <div className="space-y-3 text-sm">
+          <div className="p-3 rounded bg-slate-200 dark:bg-white/5">
+            <div className="font-semibold text-blue-400 mb-1">{t.tauxEchec}</div>
+            <div className="text-slate-700 dark:text-slate-300">{t.tauxEchecDesc}</div>
+          </div>
+          <div className="p-3 rounded bg-slate-200 dark:bg-white/5">
+            <div className="font-semibold text-orange-400 mb-1">{t.tauxRetourClient}</div>
+            <div className="text-slate-700 dark:text-slate-300">{t.tauxRetourClientDesc}</div>
+          </div>
+        </div>
+      </div>
 
       <div className="grid lg:grid-cols-2 gap-6">
         {/* Risk Management Section */}
         <div>
-          <h3 className="text-lg font-semibold mb-4">⚠️ {t.riskManagement}</h3>
+          <h3 className="text-lg font-semibold mb-4">⚠️ {t.riskAnalysis}</h3>
           <div className="space-y-4">
             <InputGroup
               label={t.returnFee}
               name="returnFee"
               value={premiumInputs.returnFee}
               onChange={onPremiumInputChange}
+              info={
+                lang === "ar"
+                  ? "رسوم الإرجاع عندما لا يستلم العميل الطلب من شركة التوصيل (مثال: 150 دج)"
+                  : "Frais de retour quand le client ne récupère pas la commande (exemple: 150 DA)"
+              }
             />
 
-            <div>
-              <label className="text-sm font-medium text-slate-600 dark:text-slate-300 mb-1 block">
-                <Tooltip text={t.returnRateTooltip}>
-                  <span>{t.returnRate}</span>
-                </Tooltip>
-              </label>
-              <div className="space-y-2">
-                <input
-                  value={premiumInputs.returnRate}
-                  onChange={(e) => onPremiumInputChange("returnRate", e.target.value)}
-                  type="number"
-                  min="0"
-                  max="100"
-                  className="w-full p-3 rounded-lg bg-slate-200 dark:bg-white/5 placeholder:text-slate-400 outline-none focus:ring-2 focus:ring-indigo-400 transition"
-                  placeholder="Enter return rate"
-                />
-                <div className="text-xs text-slate-500 flex items-center gap-2">
-                  <Info size={12} />
-                  {t.calculatedReturnRate}: {calculatedReturnRate.toFixed(2)}%
-                  <button
-                    type="button"
-                    onClick={() => onPremiumInputChange("returnRate", calculatedReturnRate.toFixed(2))}
-                    className="text-indigo-500 hover:text-indigo-600 text-xs underline"
-                  >
-                    Use this value
-                  </button>
-                </div>
-              </div>
-            </div>
+            <InputGroup
+              label={t.tauxEchec}
+              name="tauxEchec"
+              value={autoCalculatedReturnRate}
+              disabled={true}
+              info={
+                lang === "ar"
+                  ? "تُحسب تلقائياً من نسبة التأكيد ونسبة التوصيل من التبويب الرئيسي. لا يمكن تعديلها."
+                  : "Calculé automatiquement à partir du taux de confirmation et du taux de livraison. Non modifiable."
+              }
+            />
+
+            <InputGroup
+              label={t.tauxRetourClient}
+              name="returnRate"
+              value={premiumInputs.returnRate}
+              onChange={onPremiumInputChange}
+              info={
+                lang === "ar"
+                  ? "النسبة المئوية للطلبات المسلمة التي يرجعها العملاء (مختلفة عن نسبة الفشل أعلاه)"
+                  : "Pourcentage de commandes livrées que les clients retournent (différent du taux d'échec ci-dessus)"
+              }
+            />
+
+            <button
+              onClick={onRecalculate}
+              className="w-full py-3 rounded-lg bg-gradient-to-r from-amber-400 to-orange-500 text-slate-900 font-bold hover:opacity-90 transition flex items-center justify-center gap-2 shadow-lg mt-2"
+            >
+              <Calculator size={20} />
+              {lang === "ar" ? "إعادة حساب" : "Recalculer"}
+            </button>
           </div>
         </div>
 
@@ -1305,121 +1616,213 @@ function RiskManagementTab({ result, inputs, premiumInputs, onPremiumInputChange
   )
 }
 
-// Update InputForm with validation
-function InputForm({ inputs, onInputChange, onExport, onShare, t, onUndo, onRedo, canUndo, canRedo, onCalculate }) {
-  const InputGroup = ({ label, name, value, onChange, type = "number", min, max, children, tooltip }) => (
-    <div>
-      <label htmlFor={name} className="text-sm font-medium text-slate-600 dark:text-slate-300">
-        {tooltip ? (
-          <Tooltip text={tooltip}>
-            <span>{label}</span>
-          </Tooltip>
-        ) : (
-          label
-        )}
-      </label>
-      <div className="relative mt-1">
-        <input
-          id={name}
-          name={name}
-          value={value}
-          onChange={(e) => onChange(name, e.target.value)}
-          type={type}
-          min={min || "0"} // Default min to 0 for all number inputs
-          max={max}
-          className="w-full p-3 rounded-lg bg-slate-200 dark:bg-white/5 placeholder:text-slate-400 outline-none focus:ring-2 focus:ring-indigo-400 transition"
-        />
-        {children}
+// --- UI HELPER COMPONENTS ---
+
+function GlassCard({ children, className = "" }) {
+  return (
+    <section
+      className={`backdrop-blur-xl bg-white/60 dark:bg-black/20 border border-slate-200 dark:border-white/10 rounded-2xl p-5 shadow-lg ${className}`}
+    >
+      {children}
+    </section>
+  )
+}
+
+function ActionButton({ onClick, icon, text, primary = true }) {
+  const baseClasses =
+    "px-4 py-2.5 rounded-lg font-semibold shadow-sm flex items-center justify-center gap-2 transition-transform active:scale-95"
+  const primaryClasses = "bg-gradient-to-r from-teal-400 to-indigo-500 text-slate-900 hover:opacity-90"
+  const secondaryClasses = "bg-slate-200 dark:bg-white/10 hover:bg-slate-300 dark:hover:bg-white/20"
+  return (
+    <button onClick={onClick} className={`${baseClasses} ${primary ? primaryClasses : secondaryClasses}`}>
+      {icon}
+      <span>{text}</span>
+    </button>
+  )
+}
+
+function DonationButton({ href, onClick, text, icon }) {
+  const classes =
+    "px-3 py-2 text-sm rounded-lg bg-slate-200 dark:bg-white/10 border border-transparent hover:border-slate-300 dark:hover:border-white/20 transition flex items-center gap-1.5"
+  if (href) {
+    return (
+      <a href={href} target="_blank" rel="noopener noreferrer" className={classes}>
+        {text}
+      </a>
+    )
+  }
+  return (
+    <button onClick={onClick} className={classes}>
+      {text} {icon}
+    </button>
+  )
+}
+
+function BaridiMobModal({ isOpen, onClose, t }) {
+  if (!isOpen) return null
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(CONFIG.donation.baridimob)
+    toast.success(t.baridimobCopied)
+  }
+
+  return (
+    <div
+      className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+      onClick={onClose}
+    >
+      <div
+        className="bg-slate-100 dark:bg-slate-800 rounded-2xl shadow-xl p-6 max-w-sm w-full border border-slate-300 dark:border-slate-700"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <h3 className="text-lg font-bold text-center mb-2">{t.baridimobTitle}</h3>
+        <p className="text-sm text-slate-600 dark:text-slate-300 text-center mb-4">{t.baridimobInstructions}</p>
+        <div className="p-4 rounded-lg bg-slate-200 dark:bg-slate-700/50 flex justify-between items-center gap-4">
+          <span className="font-mono font-semibold text-indigo-600 dark:text-indigo-400">
+            {CONFIG.donation.baridimob}
+          </span>
+          <button
+            onClick={handleCopy}
+            title="Copy"
+            className="p-2 rounded-md hover:bg-slate-300 dark:hover:bg-slate-600 transition"
+          >
+            <Copy size={18} />
+          </button>
+        </div>
+        <button
+          onClick={onClose}
+          className="mt-5 w-full py-2.5 rounded-lg bg-indigo-500 text-white font-semibold hover:bg-indigo-600 transition"
+        >
+          Close
+        </button>
       </div>
     </div>
   )
+}
+
+function PresetModal({ isOpen, onClose, presetName, setPresetName, onSave, t }) {
+  if (!isOpen) return null
+
   return (
-    <GlassCard>
-      <div className="grid gap-4">
+    <div
+      className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+      onClick={onClose}
+    >
+      <div
+        className="bg-slate-100 dark:bg-slate-800 rounded-2xl shadow-xl p-6 max-w-sm w-full border border-slate-300 dark:border-slate-700"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <h3 className="text-lg font-bold mb-4">{t.savePreset}</h3>
+        <input
+          type="text"
+          placeholder={t.presetName}
+          value={presetName}
+          onChange={(e) => setPresetName(e.target.value)}
+          className="w-full p-3 rounded-lg bg-slate-200 dark:bg-white/5 outline-none focus:ring-2 focus:ring-indigo-400 mb-4"
+        />
         <div className="flex gap-2">
           <button
-            onClick={onUndo}
-            disabled={!canUndo}
-            className="p-2 rounded-lg bg-slate-200 dark:bg-white/10 hover:bg-slate-300 dark:hover:bg-white/20 disabled:opacity-50 transition"
-            title={t.undo}
+            onClick={onSave}
+            className="flex-1 py-2.5 rounded-lg bg-indigo-500 text-white font-semibold hover:bg-indigo-600 transition"
           >
-            <RotateCcw size={18} />
+            Save
           </button>
           <button
-            onClick={onRedo}
-            disabled={!canRedo}
-            className="p-2 rounded-lg bg-slate-200 dark:bg-white/10 hover:bg-slate-300 dark:hover:bg-white/20 disabled:opacity-50 transition"
-            title={t.redo}
+            onClick={onClose}
+            className="flex-1 py-2.5 rounded-lg bg-slate-300 dark:bg-white/10 font-semibold hover:bg-slate-400 dark:hover:bg-white/20 transition"
           >
-            <RotateCw size={18} />
+            Cancel
           </button>
         </div>
+      </div>
+    </div>
+  )
+}
 
-        <div>
-          <label htmlFor="currency" className="text-sm font-medium text-slate-600 dark:text-slate-300">
-            {t.currency}
-          </label>
-          <select
-            id="currency"
-            value={inputs.currency}
-            onChange={(e) => onInputChange("currency", e.target.value)}
-            className="w-full p-3 rounded-lg bg-slate-200 dark:bg-white/5 outline-none focus:ring-2 focus:ring-indigo-400 transition mt-1"
+function PremiumModal({ isOpen, onClose, password, setPassword, onUnlock, t }) {
+  if (!isOpen) return null
+
+  return (
+    <div
+      className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+      onClick={onClose}
+    >
+      <div
+        className="bg-slate-100 dark:bg-slate-800 rounded-2xl shadow-xl p-6 max-w-sm w-full border border-slate-300 dark:border-slate-700"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="mb-4 p-3 rounded-lg bg-amber-500/10 border border-amber-500/30">
+          <p className="text-sm font-semibold text-amber-600 dark:text-amber-400">
+            🎁 This section is exclusively for supporters who have contributed to the development of this tool.
+          </p>
+        </div>
+
+        <h3 className="text-lg font-bold mb-2 flex items-center gap-2">
+          <Lock size={20} />
+          {t.premiumFeatures}
+        </h3>
+        <p className="text-sm text-slate-600 dark:text-slate-300 mb-4">
+          Enter the password to unlock advanced risk management features.
+        </p>
+        <input
+          type="password"
+          placeholder={t.enterPassword}
+          value={password}
+          onChange={(e) => setPassword(e.target.value)}
+          onKeyPress={(e) => e.key === "Enter" && onUnlock()}
+          className="w-full p-3 rounded-lg bg-slate-200 dark:bg-white/5 outline-none focus:ring-2 focus:ring-indigo-400 mb-4"
+        />
+        <div className="flex gap-2">
+          <button
+            onClick={onUnlock}
+            className="flex-1 py-2.5 rounded-lg bg-indigo-500 text-white font-semibold hover:bg-indigo-600 transition"
           >
-            <option value="DZD">DZD (دج)</option>
-            <option value="USD">USD ($)</option>
-            <option value="EUR">EUR (€)</option>
-          </select>
-        </div>
-
-        <InputGroup
-          label={`${t.product} (${inputs.currency})`}
-          name="product"
-          value={inputs.product}
-          onChange={onInputChange}
-        />
-
-        <div className="grid sm:grid-cols-2 gap-4">
-          <InputGroup
-            label={`${t.shipping} (${inputs.currency})`}
-            name="shipping"
-            value={inputs.shipping}
-            onChange={onInputChange}
-          />
-          <InputGroup label={`${t.ad} (${inputs.currency})`} name="ad" value={inputs.ad} onChange={onInputChange} />
-        </div>
-
-        <InputGroup
-          label={`${t.price} (${inputs.currency})`}
-          name="price"
-          value={inputs.price}
-          onChange={onInputChange}
-        />
-
-        <div className="grid sm:grid-cols-2 gap-4">
-          <InputGroup label={t.conf} name="conf" value={inputs.conf} onChange={onInputChange} min="0" max="100">
-            <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-slate-400">%</div>
-          </InputGroup>
-          <InputGroup label={t.del} name="del" value={inputs.del} onChange={onInputChange} min="0" max="100">
-            <div className="absolute inset-y-0 right-3 flex items-center pointer-events-none text-slate-400">%</div>
-          </InputGroup>
-        </div>
-
-        <button
-          onClick={onCalculate}
-          className="w-full py-3 rounded-lg bg-gradient-to-r from-teal-400 to-indigo-500 text-slate-900 font-bold hover:opacity-90 transition flex items-center justify-center gap-2 shadow-lg"
-        >
-          <Calculator size={20} />
-          {t.calculate}
-        </button>
-
-        <div className="flex gap-2 flex-wrap">
-          <ActionButton onClick={onShare} icon={<LinkIcon size={16} />} text={t.share} primary={false} />
-          <ActionButton onClick={onExport} icon={<Download size={16} />} text={t.export} primary={false} />
+            {t.unlock}
+          </button>
+          <button
+            onClick={onClose}
+            className="flex-1 py-2.5 rounded-lg bg-slate-300 dark:bg-white/10 font-semibold hover:bg-slate-400 dark:hover:bg-white/20 transition"
+          >
+            Cancel
+          </button>
         </div>
       </div>
-    </GlassCard>
+    </div>
   )
+}
 
+function SupportAlertModal({ isOpen, onClose, onSupport, t }) {
+  if (!isOpen) return null
 
-
+  return (
+    <div
+      className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4"
+      onClick={onClose}
+    >
+      <div
+        className="bg-slate-100 dark:bg-slate-800 rounded-2xl shadow-xl p-6 max-w-sm w-full border border-slate-300 dark:border-slate-700"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <h3 className="text-lg font-bold mb-2 flex items-center gap-2">
+          <AlertCircle size={20} className="text-amber-500" />
+          {t.supportAlert}
+        </h3>
+        <p className="text-sm text-slate-600 dark:text-slate-300 mb-4">{t.supportAlertDesc}</p>
+        <div className="flex gap-2">
+          <button
+            onClick={onSupport}
+            className="flex-1 py-2.5 rounded-lg bg-gradient-to-r from-teal-400 to-indigo-500 text-slate-900 font-semibold hover:opacity-90 transition"
+          >
+            {t.supportNow}
+          </button>
+          <button
+            onClick={onClose}
+            className="flex-1 py-2.5 rounded-lg bg-slate-300 dark:bg-white/10 font-semibold hover:bg-slate-400 dark:hover:bg-white/20 transition"
+          >
+            {t.notNow}
+          </button>
+        </div>
+      </div>
+    </div>
+  )
 }

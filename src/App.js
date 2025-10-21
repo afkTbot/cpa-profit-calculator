@@ -150,10 +150,11 @@ const TRANSLATIONS = {
     selectLanguage: "اختر اللغة",
     riskInsights: "رؤى المخاطر",
     riskInsightsDesc: "فهم المخاطر المحتملة وكيفية إدارتها لحماية أرباحك",
-    riskTip1: "💡 نسبة الفشل العالية تعني أن معظم الطلبات لا تتحول إلى مبيعات فعلية",
-    riskTip2: "📊 مراقبة نسبة الإرجاع مهمة - كل إرجاع يكلفك رسوم الشحن",
-    riskTip3: "🎯 للحفاظ على الربحية، يجب أن تكون نسبة النجاح أعلى من الحد الأدنى",
-    riskTip4: "⚖️ وازن بين تكلفة الإعلانات والربح المتوقع لكل عملية بيع",
+    performanceMetrics: "مقاييس الأداء",
+    supportDeveloper: "ادعم المطور ☕",
+    resultsLabel: "النتائج",
+    failureVsReturnTitle: "نسبة الفشل مقابل نسبة الإرجاع",
+    failureVsReturnDesc: "نسبة الفشل = الطلبات التي لم تُؤكد أو تُسلم. نسبة الإرجاع = الطلبات المسلمة ثم تُرجع لاحقاً. كلاهما يؤثر على الربح، لكن أسبابهما مختلفة.",
   },
   fr: {
     title: "Calculateur de Profit COD – Algérie",
@@ -249,10 +250,11 @@ const TRANSLATIONS = {
     selectLanguage: "Choisir la langue",
     riskInsights: "Aperçus des Risques",
     riskInsightsDesc: "Comprendre les risques potentiels et comment les gérer pour protéger vos profits",
-    riskTip1: "💡 Un taux d'échec élevé signifie que la plupart des commandes ne se transforment pas en ventes réelles",
-    riskTip2: "📊 Surveiller le taux de retour est important - chaque retour vous coûte des frais d'expédition",
-    riskTip3: "🎯 Pour maintenir la rentabilité, le taux de succès doit être supérieur au minimum",
-    riskTip4: "⚖️ Équilibrez les coûts publicitaires et le profit attendu par vente",
+    performanceMetrics: "Métriques de performance",
+    supportDeveloper: "Soutenez le développeur ☕",
+    resultsLabel: "Résultats",
+    failureVsReturnTitle: "Taux d'échec vs Taux de retour",
+    failureVsReturnDesc: "Taux d'échec = commandes non confirmées ou non livrées. Taux de retour = commandes livrées puis retournées. Les causes et solutions diffèrent.",
   },
   en: {
     title: "COD Profit Calculator – Algeria",
@@ -348,10 +350,11 @@ const TRANSLATIONS = {
     selectLanguage: "Select Language",
     riskInsights: "Risk Insights",
     riskInsightsDesc: "Understand potential risks and how to manage them to protect your profits",
-    riskTip1: "💡 High failure rate means most orders don't convert to actual sales",
-    riskTip2: "📊 Monitoring return rate is important - each return costs you shipping fees",
-    riskTip3: "🎯 To maintain profitability, success rate must be above minimum threshold",
-    riskTip4: "⚖️ Balance advertising costs with expected profit per sale",
+    performanceMetrics: "Performance Metrics",
+    supportDeveloper: "Support the Developer ☕",
+    resultsLabel: "Results",
+    failureVsReturnTitle: "Failure Rate vs Return Rate",
+    failureVsReturnDesc: "Failure Rate = orders not confirmed or not delivered. Return Rate = orders delivered then returned later. Causes differ and require different actions.",
   },
 }
 
@@ -579,23 +582,14 @@ export default function App() {
   // --- THEME EFFECT ---
   useEffect(() => {
     const savedTheme = localStorage.getItem("cpa-theme")
-    if (savedTheme === "dark") {
-      setDark(true)
-      document.documentElement.classList.add("dark")
-    } else {
-      setDark(false)
-      document.documentElement.classList.remove("dark")
-    }
+    const isDark = savedTheme === "dark"
+    setDark(isDark)
+    document.documentElement.classList.toggle("dark", isDark)
   }, [])
 
   useEffect(() => {
-    if (dark) {
-      document.documentElement.classList.add("dark")
-      localStorage.setItem("cpa-theme", "dark")
-    } else {
-      document.documentElement.classList.remove("dark")
-      localStorage.setItem("cpa-theme", "light")
-    }
+    document.documentElement.classList.toggle("dark", dark)
+    localStorage.setItem("cpa-theme", dark ? "dark" : "light")
   }, [dark])
 
   // --- URL SYNC EFFECT ---
@@ -700,6 +694,13 @@ export default function App() {
     }
     setResult(results)
 
+    // Sync premiumInputs.returnRate so premium tab shows auto-calculated return %
+    setPremiumInputs(prev => {
+      const updated = { ...prev, returnRate: String(results.returnRate) }
+      localStorage.setItem("cod-premium-inputs", JSON.stringify(updated))
+      return updated
+    })
+
     setHistory(prev => {
       const newHistory = prev.slice(0, historyIndex + 1)
       newHistory.push({ inputs: { ...inputs }, result: results, timestamp: new Date().toISOString() })
@@ -709,7 +710,8 @@ export default function App() {
     })
 
     return results
-  }, [inputs, premiumInputs, historyIndex])
+    // NOTE: removed historyIndex from deps to avoid unnecessary recalculations
+  }, [inputs, premiumInputs])
 
   // --- HANDLERS ---
   const handleInputChange = (key, value) => {
@@ -782,13 +784,15 @@ export default function App() {
   }
 
   const exportPDF = async () => {
-    if (!result) {
+    const currentResult = result
+    if (!currentResult) {
       toast.error(lang === "ar" ? "احسب أولاً" : lang === "fr" ? "Calculez d'abord" : "Calculate first")
       return
     }
 
     try {
       const { jsPDF } = await import('jspdf')
+      // html2canvas kept available if later used for full DOM capture
       const html2canvas = (await import('html2canvas')).default
 
       const pdf = new jsPDF('p', 'mm', 'a4')
@@ -819,18 +823,18 @@ export default function App() {
 
       yPos += 10
       pdf.setFontSize(16)
-      pdf.text(lang === "ar" ? "النتائج" : lang === "fr" ? "Résultats" : "Results", 20, yPos)
+      pdf.text(t.resultsLabel || (lang === "ar" ? "النتائج" : lang === "fr" ? "Résultats" : "Results"), 20, yPos)
       yPos += 15
       pdf.setFontSize(12)
 
-      addLine(t.successRate, `${(result.success * 100).toFixed(2)}%`)
-      addLine(t.netProfit, `${moneyFmt(result.net)} DZD`)
-      addLine(t.profitMargin, `${result.margin.toFixed(2)}%`)
-      addLine(t.maxAd, `${moneyFmt(result.maxAd)} DZD`)
-      addLine(t.effAd, `${moneyFmt(result.effAd)} DZD`)
-      addLine(t.totalCost, `${moneyFmt(result.totalCost)} DZD`)
-      addLine(t.roi, `${result.roi.toFixed(2)}%`)
-      addLine(t.projectedProfit, `${moneyFmt(result.projectedProfit)} DZD`)
+      addLine(t.successRate, `${(currentResult.success * 100).toFixed(2)}%`)
+      addLine(t.netProfit, `${moneyFmt(currentResult.net)} DZD`)
+      addLine(t.profitMargin, `${currentResult.margin.toFixed(2)}%`)
+      addLine(t.maxAd, `${moneyFmt(currentResult.maxAd)} DZD`)
+      addLine(t.effAd, `${moneyFmt(currentResult.effAd)} DZD`)
+      addLine(t.totalCost, `${moneyFmt(currentResult.totalCost)} DZD`)
+      addLine(t.roi, `${currentResult.roi.toFixed(2)}%`)
+      addLine(t.projectedProfit, `${moneyFmt(currentResult.projectedProfit)} DZD`)
 
       pdf.save('cod_profit_report.pdf')
       toast.success(lang === "ar" ? "تم التصدير!" : lang === "fr" ? "Exporté!" : "Exported!")
@@ -1177,7 +1181,7 @@ function ResultsDisplay({ result, t, onBaridiMobClick, onAddComparison, onSavePr
   }, [result])
 
   return (
-    <GlassCard className="flex flex-col gap-4">
+    <GlassCard className="flex flex-col gap-4 transition-all duration-300">
       {resultData ? (
         <>
           <div className="flex justify-between items-start">
@@ -1220,7 +1224,7 @@ function ResultsDisplay({ result, t, onBaridiMobClick, onAddComparison, onSavePr
           </div>
 
           <div className="mt-auto pt-4 border-t border-slate-300 dark:border-white/10">
-            <div className="text-sm font-semibold mb-3">Support the Developer ☕</div>
+            <div className="text-sm font-semibold mb-3">{t.supportDeveloper}</div>
             <div className="flex gap-2 flex-wrap">
               <DonationButton href={CONFIG.donation.paypal} text="PayPal" />
               <DonationButton href={CONFIG.donation.kofi} text="Ko-fi" />
@@ -1254,11 +1258,11 @@ function HistoryTab({ history, t, onLoadEntry, onClearHistory }) {
           {history.map((entry, idx) => (
             <div key={idx} className="p-3 rounded-lg bg-slate-200 dark:bg-white/5 flex justify-between items-center">
               <div className="text-sm">
-                <div className="font-semibold">Profit: {moneyFmt(entry.result.net)} DZD</div>
+                <div className="font-semibold">ربح: {moneyFmt(entry.result.net)} دج</div>
                 <div className="text-xs text-slate-500">{new Date(entry.timestamp).toLocaleString()}</div>
               </div>
               <button onClick={() => onLoadEntry(entry)} className="px-3 py-1 rounded bg-indigo-500 text-white hover:bg-indigo-600 transition text-sm">
-                Load
+                تحميل
               </button>
             </div>
           ))}
@@ -1274,7 +1278,7 @@ function PresetsTab({ presets, t, onLoadPreset, onDeletePreset, onNewPreset }) {
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-xl font-bold">{t.presets}</h2>
         <button onClick={onNewPreset} className="px-3 py-2 rounded-lg bg-gradient-to-r from-teal-400 to-indigo-500 text-slate-900 hover:opacity-90 transition flex items-center gap-2">
-          <Plus size={16} /> New
+          <Plus size={16} /> جديد
         </button>
       </div>
       {presets.length === 0 ? (
@@ -1285,14 +1289,14 @@ function PresetsTab({ presets, t, onLoadPreset, onDeletePreset, onNewPreset }) {
             <div key={preset.id} className="p-4 rounded-lg bg-slate-200 dark:bg-white/5 flex justify-between items-center">
               <div>
                 <div className="font-semibold">{preset.name}</div>
-                <div className="text-sm text-slate-500">Price: {preset.inputs.price} {preset.inputs.currency}</div>
+                <div className="text-sm text-slate-500">السعر: {preset.inputs.price} {preset.inputs.currency}</div>
               </div>
               <div className="flex gap-2">
                 <button onClick={() => onLoadPreset(preset)} className="px-3 py-1 rounded bg-indigo-500 text-white hover:bg-indigo-600 transition text-sm">
-                  Load
+                  تحميل
                 </button>
                 <button onClick={() => onDeletePreset(preset.id)} className="px-3 py-1 rounded bg-red-500 text-white hover:bg-red-600 transition text-sm">
-                  Delete
+                  حذف
                 </button>
               </div>
             </div>
@@ -1316,15 +1320,21 @@ function AnalyticsTab({ result, inputs, t, lang }) {
 
   const COLORS = ['#06b6d4', '#8b5cf6', '#f59e0b', '#10b981', '#ef4444']
 
+  // convert input values to DZD for charts using exchange rate
+  const exchangeRate = CONFIG.exchangeRates[inputs.currency] || 1
+  const toDZD = (v) => (Number(v || 0) * exchangeRate)
+
   const costData = [
-    { name: t.product, value: Number(inputs.product), color: COLORS[0] },
-    { name: t.shipping, value: Number(inputs.shipping), color: COLORS[1] },
-    { name: t.ad, value: Number(inputs.ad), color: COLORS[2] },
+    { name: t.product, value: toDZD(inputs.product), color: COLORS[0] },
+    { name: t.shipping, value: toDZD(inputs.shipping), color: COLORS[1] },
+    { name: t.ad, value: toDZD(inputs.ad), color: COLORS[2] },
+    // include effective ad cost (per delivered) so users can see real ad burden
+    { name: t.effAd, value: isFinite(result.effAd) ? result.effAd : 0, color: COLORS[3] },
   ].filter(item => item.value > 0)
 
   const profitData = [
-    { name: t.netProfit, value: Math.max(0, result.net), color: COLORS[3] },
-    { name: t.totalCost, value: result.totalCost, color: COLORS[4] },
+    { name: t.netProfit, value: Math.max(0, result.net), color: COLORS[4] },
+    { name: t.totalCost, value: result.totalCost, color: '#64748b' },
   ]
 
   const performanceData = [
@@ -1371,7 +1381,7 @@ function AnalyticsTab({ result, inputs, t, lang }) {
                   <Cell key={`cell-${index}`} fill={entry.color} />
                 ))}
               </Pie>
-              <Tooltip />
+              <Tooltip formatter={(value) => moneyFmt(value) + " DZD"} />
               <Legend />
             </RechartsPC>
           </ResponsiveContainer>
@@ -1387,10 +1397,10 @@ function AnalyticsTab({ result, inputs, t, lang }) {
             <RechartsPC>
               <Pie data={profitData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={80} label>
                 {profitData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.color} />
+                  <Cell key={`cell-p-${index}`} fill={entry.color} />
                 ))}
               </Pie>
-              <Tooltip />
+              <Tooltip formatter={(value) => moneyFmt(value) + " DZD"} />
               <Legend />
             </RechartsPC>
           </ResponsiveContainer>
@@ -1401,7 +1411,7 @@ function AnalyticsTab({ result, inputs, t, lang }) {
       <div className="mb-8 p-4 rounded-lg bg-slate-200 dark:bg-white/5">
         <h3 className="font-semibold mb-4 flex items-center gap-2">
           <TrendingUp size={18} />
-          Performance Metrics
+          {t.performanceMetrics || "Performance Metrics"}
         </h3>
         <ResponsiveContainer width="100%" height={250}>
           <BarChart data={performanceData}>

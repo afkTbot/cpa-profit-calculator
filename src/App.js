@@ -592,7 +592,7 @@ export default function App() {
         </main>
 
         <footer className="mt-6 text-center text-sm text-slate-400">
-          Made with ❤️ — share in Telegram groups & e-commerce chats.
+          Made with s ❤️ — share in Telegram groups & e-commerce chats.
         </footer>
 
         {/* donation modals */}

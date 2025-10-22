@@ -153,6 +153,14 @@ const TRANSLATIONS = {
     riskTip2: "📊 مراقبة نسبة الإرجاع مهمة - كل إرجاع يكلفك رسوم الشحن",
     riskTip3: "🎯 للحفاظ على الربحية، يجب أن تكون نسبة النجاح أعلى من الحد الأدنى",
     riskTip4: "⚖️ وازن بين تكلفة الإعلانات والربح المتوقع لكل عملية بيع",
+    // new keys for locked UI & donation prompts
+    lockedSectionTitle: "مقفول - لمساهمي الدعم",
+    lockedSectionDesc: "هذه الميزة متاحة فقط للمهتمين بدعم التطوير. إذا تبرعت، أدخل كلمة المرور هنا لفتح المحتوى.",
+    enterDonorPassword: "أدخل كلمة المرور (للمتبرعين)",
+    donateNow: "ادعم الآن",
+    unlockSuccess: "تم فتح القسم، شكراً لدعمك!",
+    unlockFailed: "كلمة مرور غير صحيحة. إذا دعمت مسبقاً، تحقق من البريد أو قدم إثباتًا.",
+    donateReminder: "شكراً لفتحك هذا القسم — تذكير لطيف: إذا رغبت بدعم التطوير، يمكنك التبرع الآن.",
   },
   fr: {
     title: "Calculateur de Profit COD – Algérie",
@@ -252,6 +260,14 @@ const TRANSLATIONS = {
     riskTip2: "📊 Surveiller le taux de retour est important - chaque retour vous coûte des frais d'expédition",
     riskTip3: "🎯 Pour maintenir la rentabilité, le taux de succès doit être supérieur au minimum",
     riskTip4: "⚖️ Équilibrez les coûts publicitaires et le profit attendu par vente",
+    // new keys for locked UI & donation prompts
+    lockedSectionTitle: "Verrouillé - Pour les contributeurs",
+    lockedSectionDesc: "Cette section est réservée aux personnes ayant soutenu le développement. Si vous avez fait un don, entrez le mot de passe pour accéder.",
+    enterDonorPassword: "Entrez le mot de passe (donateurs)",
+    donateNow: "Soutenir maintenant",
+    unlockSuccess: "Section déverrouillée, merci pour votre soutien!",
+    unlockFailed: "Mot de passe incorrect. Si vous avez soutenu, vérifiez votre message de confirmation.",
+    donateReminder: "Merci d'avoir ouvert cette section — petit rappel : vous pouvez soutenir le développement avec un don.",
   },
   en: {
     title: "COD Profit Calculator – Algeria",
@@ -351,6 +367,14 @@ const TRANSLATIONS = {
     riskTip2: "📊 Monitoring return rate is important - each return costs you shipping fees",
     riskTip3: "🎯 To maintain profitability, success rate must be above minimum threshold",
     riskTip4: "⚖️ Balance advertising costs with expected profit per sale",
+    // new keys for locked UI & donation prompts
+    lockedSectionTitle: "Locked - For Supporters",
+    lockedSectionDesc: "This section is reserved for supporters who contributed. If you donated, enter the password to unlock.",
+    enterDonorPassword: "Enter password (donors)",
+    donateNow: "Donate now",
+    unlockSuccess: "Section unlocked — thank you for supporting!",
+    unlockFailed: "Incorrect password. If you supported, please check your confirmation.",
+    donateReminder: "Thanks for accessing this section — friendly reminder: consider donating to support development.",
   },
 }
 
@@ -739,6 +763,17 @@ export default function App() {
     }
   }
 
+  const attemptUnlock = (pw) => {
+    if (pw === CONFIG.premiumPassword) {
+      setPremiumUnlocked(true)
+      localStorage.setItem("cod-premium-unlocked", "true")
+      toast.success(t.unlockSuccess)
+      setShowPremiumModal(false)
+    } else {
+      toast.error(t.unlockFailed)
+    }
+  }
+
   const copyShareLink = () => {
     navigator.clipboard
       .writeText(window.location.href)
@@ -895,6 +930,19 @@ export default function App() {
     toast.success(lang === "ar" ? "تم المسح!" : lang === "fr" ? "Effacé!" : "Cleared!")
   }
 
+  // Add donation reminder effect: when user unlocked and stays on a protected tab, remind after 2 minutes
+  useEffect(() => {
+    const protectedTabs = ["analytics", "comparison", "riskManagement"]
+    if (premiumUnlocked && protectedTabs.includes(activeTab)) {
+      const timer = setTimeout(() => {
+        // show the support alert (re-uses existing modal)
+        setShowSupportAlert(true)
+        // optionally store that we showed reminder for this session (not persisted)
+      }, 2 * 60 * 1000) // 2 minutes
+      return () => clearTimeout(timer)
+    }
+  }, [premiumUnlocked, activeTab])
+
   return (
     <>
       <Toaster position="bottom-center" toastOptions={{ className: "dark:bg-slate-700 dark:text-slate-100" }} />
@@ -942,22 +990,24 @@ export default function App() {
               { id: "calculator", label: t.calc, icon: "🧮" },
               { id: "history", label: t.history, icon: "📋" },
               { id: "presets", label: t.presets, icon: "💾" },
-              { id: "analytics", label: t.analytics, icon: "📊", premium: false },
+              // analytics is now protected
+              { id: "analytics", label: t.analytics, icon: "📊", premium: true },
               { id: "comparison", label: t.comparison, icon: "⚖️", premium: true },
               { id: "riskManagement", label: t.premium, icon: premiumUnlocked ? "🔓" : "🔒", premium: true },
             ].map(tab => (
               <button
                 key={tab.id}
                 onClick={() => {
+                  // always set active tab so LockedSection can render inline
+                  setActiveTab(tab.id)
+                  // optionally open the modal hint for premium if locked (keeps original modal available)
                   if (tab.premium && !premiumUnlocked) {
                     setShowPremiumModal(true)
-                  } else {
-                    setActiveTab(tab.id)
                   }
                 }}
                 className={`px-4 py-2 rounded-lg font-semibold transition-all ${activeTab === tab.id
-                    ? "bg-gradient-to-r from-teal-400 to-indigo-500 text-slate-900 shadow-lg"
-                    : "bg-slate-200 dark:bg-white/10 hover:bg-slate-300 dark:hover:bg-white/20"
+                  ? "bg-gradient-to-r from-teal-400 to-indigo-500 text-slate-900 shadow-lg"
+                  : "bg-slate-200 dark:bg-white/10 hover:bg-slate-300 dark:hover:bg-white/20"
                   }`}
               >
                 {tab.icon} {tab.label}
@@ -999,23 +1049,35 @@ export default function App() {
           )}
 
           {activeTab === "analytics" && (
-            <AnalyticsTab result={result} inputs={inputs} t={t} lang={lang} />
+            premiumUnlocked ? (
+              <AnalyticsTab result={result} inputs={inputs} t={t} lang={lang} />
+            ) : (
+              <LockedSection t={t} lang={lang} onUnlock={attemptUnlock} onDonate={() => setModalOpen(true)} />
+            )
           )}
 
-          {activeTab === "comparison" && premiumUnlocked && (
-            <ComparisonTab comparison={comparison} t={t} onRemove={removeFromComparison} />
+          {activeTab === "comparison" && (
+            premiumUnlocked ? (
+              <ComparisonTab comparison={comparison} t={t} onRemove={removeFromComparison} />
+            ) : (
+              <LockedSection t={t} lang={lang} onUnlock={attemptUnlock} onDonate={() => setModalOpen(true)} />
+            )
           )}
 
-          {activeTab === "riskManagement" && premiumUnlocked && (
-            <PremiumTab
-              result={result}
-              inputs={inputs}
-              premiumInputs={premiumInputs}
-              onPremiumInputChange={handlePremiumInputChange}
-              onRecalculate={handleCalculate}
-              t={t}
-              lang={lang}
-            />
+          {activeTab === "riskManagement" && (
+            premiumUnlocked ? (
+              <PremiumTab
+                result={result}
+                inputs={inputs}
+                premiumInputs={premiumInputs}
+                onPremiumInputChange={handlePremiumInputChange}
+                onRecalculate={handleCalculate}
+                t={t}
+                lang={lang}
+              />
+            ) : (
+              <LockedSection t={t} lang={lang} onUnlock={attemptUnlock} onDonate={() => setModalOpen(true)} />
+            )
           )}
 
           <footer className="mt-8 text-center text-sm text-slate-500 dark:text-slate-400">
@@ -1886,5 +1948,44 @@ function SupportAlertModal({ isOpen, onClose, onSupport, t }) {
         </div>
       </div>
     </div>
+  )
+}
+
+// --- NEW COMPONENT: LockedSection ---
+function LockedSection({ t, lang, onUnlock, onDonate }) {
+  const [localPass, setLocalPass] = useState("")
+
+  return (
+    <GlassCard className="mt-6">
+      <div className="text-center space-y-4">
+        <div className="text-2xl font-bold">{t.lockedSectionTitle}</div>
+        <p className="text-sm text-slate-600 dark:text-slate-300">{t.lockedSectionDesc}</p>
+
+        <div className="max-w-md mx-auto">
+          <input
+            type="password"
+            placeholder={t.enterDonorPassword}
+            value={localPass}
+            onChange={(e) => setLocalPass(e.target.value)}
+            className="w-full p-3 rounded-lg bg-slate-200 dark:bg-white/5 outline-none focus:ring-2 focus:ring-indigo-400 mb-3"
+          />
+          <div className="flex gap-2">
+            <button
+              onClick={() => onUnlock(localPass)}
+              className="flex-1 py-2 rounded-lg bg-indigo-500 text-white font-semibold hover:bg-indigo-600 transition"
+            >
+              {t.unlock}
+            </button>
+            <button
+              onClick={onDonate}
+              className="flex-1 py-2 rounded-lg bg-amber-400 text-slate-900 font-semibold hover:opacity-90 transition"
+            >
+              {t.donateNow}
+            </button>
+          </div>
+          <p className="text-xs text-slate-500 mt-3">{t.lockedMotivation || ""}</p>
+        </div>
+      </div>
+    </GlassCard>
   )
 }

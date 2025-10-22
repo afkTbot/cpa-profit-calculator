@@ -161,6 +161,10 @@ const TRANSLATIONS = {
     unlockSuccess: "تم فتح القسم، شكراً لدعمك!",
     unlockFailed: "كلمة مرور غير صحيحة. إذا دعمت مسبقاً، تحقق من البريد أو قدم إثباتًا.",
     donateReminder: "شكراً لفتحك هذا القسم — تذكير لطيف: إذا رغبت بدعم التطوير، يمكنك التبرع الآن.",
+    // new encouragement copy for premium modal
+    premiumEncourageTitle: "ميزات للمساهمين 🎁",
+    premiumEncourageBody: "بدعمك تحصل على أدوات تحليل وميزات إدارة مخاطر متقدمة تساعدك على حماية أرباحك وتطوير الأداة. شكراً لكل دعم — إذا تبرعت، أدخل كلمة المرور لفتح هذه الميزات.",
+    premiumEnterPasswordHint: "أدخل كلمة المرور لتمكين ميزات إدارة المخاطر المتقدمة.",
   },
   fr: {
     title: "Calculateur de Profit COD – Algérie",
@@ -268,6 +272,10 @@ const TRANSLATIONS = {
     unlockSuccess: "Section déverrouillée, merci pour votre soutien!",
     unlockFailed: "Mot de passe incorrect. Si vous avez soutenu, vérifiez votre message de confirmation.",
     donateReminder: "Merci d'avoir ouvert cette section — petit rappel : vous pouvez soutenir le développement avec un don.",
+    // new encouragement copy for premium modal
+    premiumEncourageTitle: "Avantages pour les contributeurs 🎁",
+    premiumEncourageBody: "En nous soutenant, vous débloquez des outils d'analyse avancés et des fonctions de gestion des risques pour protéger vos marges. Merci pour votre soutien — si vous avez donné, entrez le mot de passe.",
+    premiumEnterPasswordHint: "Entrez le mot de passe pour activer les fonctionnalités avancées de gestion des risques.",
   },
   en: {
     title: "COD Profit Calculator – Algeria",
@@ -375,6 +383,10 @@ const TRANSLATIONS = {
     unlockSuccess: "Section unlocked — thank you for supporting!",
     unlockFailed: "Incorrect password. If you supported, please check your confirmation.",
     donateReminder: "Thanks for accessing this section — friendly reminder: consider donating to support development.",
+    // new encouragement copy for premium modal
+    premiumEncourageTitle: "Supporter Perks 🎁",
+    premiumEncourageBody: "By supporting the project you unlock advanced analytics and risk tools to protect your margins and help fund continuous improvements. Thank you — if you donated, enter your donor password to unlock.",
+    premiumEnterPasswordHint: "Enter the password to enable advanced risk-management features.",
   },
 }
 
@@ -1893,10 +1905,10 @@ function PremiumModal({ isOpen, onClose, password, setPassword, onUnlock, t }) {
   return (
     <div className="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-center justify-center z-50 p-4" onClick={onClose}>
       <div className="bg-slate-100 dark:bg-slate-800 rounded-2xl shadow-xl p-6 max-w-sm w-full border border-slate-300 dark:border-slate-700" onClick={(e) => e.stopPropagation()}>
-        <div className="mb-4 p-3 rounded-lg bg-amber-500/10 border border-amber-500/30">
-          <p className="text-sm font-semibold text-amber-600 dark:text-amber-400">
-            🎁 This section is exclusively for supporters who have contributed to the development of this tool.
-          </p>
+        {/* Replaced old hard-coded box with localized encouragement */}
+        <div className="mb-4 p-3 rounded-lg bg-emerald-50 dark:bg-emerald-900/20 border border-emerald-200 dark:border-emerald-700">
+          <div className="font-semibold text-emerald-700 dark:text-emerald-300">{t.premiumEncourageTitle}</div>
+          <p className="text-sm text-slate-700 dark:text-slate-300 mt-2">{t.premiumEncourageBody}</p>
         </div>
 
         <h3 className="text-lg font-bold mb-2 flex items-center gap-2">
@@ -1904,7 +1916,8 @@ function PremiumModal({ isOpen, onClose, password, setPassword, onUnlock, t }) {
           {t.premiumFeatures}
         </h3>
         <p className="text-sm text-slate-600 dark:text-slate-300 mb-4">
-          Enter the password to unlock advanced risk management features.
+          {/* localized short hint */}
+          {t.premiumEnterPasswordHint}
         </p>
         <input
           type="password"
